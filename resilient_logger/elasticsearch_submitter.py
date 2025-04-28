@@ -14,27 +14,30 @@ ES_STATUS_CREATED = "created"
 class ElasticsearchSubmitter(AbstractSubmitter):
     """
     Submitter class that sends the resilient log entries to Elasticsearch.
+    Every other argument should be provided by user, log_facade is provided
+    by ResilientLogHandler's constructor after loading and validating it.
     """
     _client: Elasticsearch
     _index: str
 
     def __init__(self,
             log_facade: Type[AbstractLogFacade],
-            client: Elasticsearch,
-            index: str,
+            es_host: str,
+            es_port: int,
+            es_scheme: str,
+            es_username: str,
+            es_password: str,
+            es_index: str,
             batch_limit: int = 5000,
             chunk_size: int = 500,
     ) -> None:
         super().__init__(log_facade, batch_limit, chunk_size)
 
-        if not client:
-            raise Exception("ElasticsearchSubmitter is missing argument client.")
+        elasticsearch_host = {"host": es_host, "port": es_port, "scheme": es_scheme}
+        elasticsearch_auth = (es_username, es_password)
 
-        if not index:
-            raise Exception("ElasticsearchSubmitter is missing argument index.")
-
-        self._index = index
-        self._client = client
+        self._index = es_index
+        self._client = Elasticsearch([elasticsearch_host], basic_auth=elasticsearch_auth)
 
     @override
     def _submit_entry(self, entry: AbstractLogFacade) -> Optional[str]:
