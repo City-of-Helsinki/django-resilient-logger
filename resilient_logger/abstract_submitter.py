@@ -1,38 +1,12 @@
 import logging
-import os
 from abc import abstractmethod
-from typing import Any, Dict, Generator, List, Optional, Type, TypedDict
+from typing import Any, Generator, List, Optional, Type
 
-from apscheduler.schedulers.background import BackgroundScheduler
 from django.db import transaction
 
 from resilient_logger.abstract_log_facade import AbstractLogFacade
 
 logger = logging.getLogger(__name__)
-
-class IntervalOptions(TypedDict):
-    """
-    Defines internal format for apscheduler trigger definitions (trigger, trigger_args).
-    See: https://apscheduler.readthedocs.io/en/3.x/modules/schedulers/base.html#apscheduler.schedulers.base.BaseScheduler.add_job
-    """
-    trigger: str
-    args: Dict[str, Any]
-
-_default_submit_unsent_entries_trigger = IntervalOptions({
-    'trigger': 'interval',
-    'args': { 'minutes': 15 }
-})
-
-_default_clear_sent_entries_trigger = IntervalOptions({
-    'trigger': 'cron',
-    'args': {
-        'month':"*",
-        'day': "1",
-        'hour': "0",
-        'minute': "0",
-        'second': "0",
-    }
-})
 
 class AbstractSubmitter:
     """
@@ -49,48 +23,10 @@ class AbstractSubmitter:
             log_facade: Type[AbstractLogFacade],
             batch_limit: int = 5000,
             chunk_size: int = 500,
-            submit_unsent_entries_trigger: Optional[IntervalOptions] =
-                _default_submit_unsent_entries_trigger,
-            clear_sent_entries_trigger: Optional[IntervalOptions] =
-                _default_clear_sent_entries_trigger,
     ) -> None:
         self._log_facade = log_facade
         self._batch_limit = batch_limit
         self._chunk_size = chunk_size
-
-        if not submit_unsent_entries_trigger:
-            logger.info("Skipping submit_entries scheduling.")
-
-        if not clear_sent_entries_trigger:
-            logger.info("Skipping clear_old_entries scheduling.")
-
-        have_some_trigger = submit_unsent_entries_trigger or clear_sent_entries_trigger
-
-        if have_some_trigger and self.should_schedule():
-            scheduler = BackgroundScheduler()
-            scheduler.start()
-
-            if submit_unsent_entries_trigger:
-                scheduler.add_job(
-                    self.submit_unsent_entries,
-                    id="submit_unsent_entries",
-                    name="submit_unsent_entries",
-                    max_instances=1,
-                    replace_existing=True,
-                    trigger=submit_unsent_entries_trigger.get('trigger'),
-                    **submit_unsent_entries_trigger.get('args'),
-                )
-
-            if clear_sent_entries_trigger:
-                scheduler.add_job(
-                    self.clear_sent_entries,
-                    id="clear_sent_entries",
-                    name="clear_sent_entries",
-                    max_instances=1,
-                    replace_existing=True,
-                    trigger=clear_sent_entries_trigger.get('trigger'),
-                    **clear_sent_entries_trigger.get('args'),
-                )
 
     @abstractmethod
     def _submit_entry(self, entry: AbstractLogFacade) -> Optional[str]:
@@ -141,11 +77,3 @@ class AbstractSubmitter:
             raise Exception("self._log_facade is None, cannot proceed without it.")
 
         return self._log_facade
-
-    @staticmethod
-    def should_schedule():
-        if os.environ.get("SUBMITTER_SCHEDULED", None) is None:
-            os.environ['SUBMITTER_SCHEDULED'] = 'True'
-            return True
-
-        return False

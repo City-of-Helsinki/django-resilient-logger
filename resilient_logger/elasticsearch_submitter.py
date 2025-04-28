@@ -33,11 +33,11 @@ class ElasticsearchSubmitter(AbstractSubmitter):
     ) -> None:
         super().__init__(log_facade, batch_limit, chunk_size)
 
-        elasticsearch_host = {"host": es_host, "port": es_port, "scheme": es_scheme}
-        elasticsearch_auth = (es_username, es_password)
-
         self._index = es_index
-        self._client = Elasticsearch([elasticsearch_host], basic_auth=elasticsearch_auth)
+        self._client = Elasticsearch(
+            [{"host": es_host, "port": es_port, "scheme": es_scheme}],
+            basic_auth=(es_username, es_password)
+        )
 
     @override
     def _submit_entry(self, entry: AbstractLogFacade) -> Optional[str]:

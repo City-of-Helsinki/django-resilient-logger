@@ -1,6 +1,6 @@
 import os
 
-from setuptools import setup
+from setuptools import setup, find_packages
 
 with open(os.path.join(os.path.dirname(__file__), "README.md")) as readme:
     README = readme.read()
@@ -10,9 +10,8 @@ os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 
 setup(
     name="django-resilient-logger",
-    version="0.1.3",
-    packages=["resilient_logger"],
-    include_package_data=True,
+    version="0.1.4",
+    packages=find_packages(exclude=["*tests*"]),
     license="MIT",
     description="A module that provides django-specific resilient logger module.",
     long_description=README,
@@ -22,8 +21,8 @@ setup(
     author_email="dev@hel.fi",
     install_requires=[
         "django>=4.2",
-        "apscheduler>=3.0.0",
-        "elasticsearch>=8.0.0"
+        "elasticsearch>=8.0.0",
+        'django_extensions>=4.0'
     ],
     classifiers=[
         "Environment :: Web Environment",
