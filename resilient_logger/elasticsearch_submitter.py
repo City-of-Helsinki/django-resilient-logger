@@ -1,6 +1,8 @@
 import logging
 from typing import Optional, Type, override
+
 from elasticsearch import Elasticsearch
+
 from resilient_logger.abstract_log_facade import AbstractLogFacade
 from resilient_logger.abstract_submitter import AbstractSubmitter
 
@@ -26,14 +28,14 @@ class ElasticsearchSubmitter(AbstractSubmitter):
         super().__init__(log_facade, batch_limit, chunk_size)
 
         if not client:
-            raise Exception(f"ElasticsearchSubmitter is missing required argument client.")
+            raise Exception("ElasticsearchSubmitter is missing argument client.")
 
         if not index:
-            raise Exception(f"ElasticsearchSubmitter is missing required argument index.")
-        
+            raise Exception("ElasticsearchSubmitter is missing argument index.")
+
         self._index = index
         self._client = client
-    
+
     @override
     def _submit_entry(self, entry: AbstractLogFacade) -> Optional[str]:
         document = entry.get_context()
@@ -51,5 +53,5 @@ class ElasticsearchSubmitter(AbstractSubmitter):
 
         if response.get("result") == ES_STATUS_CREATED:
             return response.get("_id")
-        
+
         return None

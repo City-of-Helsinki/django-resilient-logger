@@ -1,8 +1,11 @@
-from datetime import timedelta, datetime
+from datetime import datetime, timedelta
+from typing import Any, Generator, Self, Union, override
+
 from django.db import transaction
+
 from resilient_logger.abstract_log_facade import AbstractLogFacade
 from resilient_logger.models import ResilientLogEntry
-from typing import Any, Generator, Self, Union, override
+
 
 class ResilientLogFacade(AbstractLogFacade):
     _log: ResilientLogEntry
@@ -17,15 +20,15 @@ class ResilientLogFacade(AbstractLogFacade):
     @override
     def get_level(self) -> int:
         return self._log.level
-    
+
     @override
     def get_message(self) -> Any:
         return self._log.message
-    
+
     @override
     def get_context(self) -> Any:
         return self._log.context
-    
+
     @override
     def is_sent(self) -> bool:
         return self._log.is_sent
@@ -39,13 +42,22 @@ class ResilientLogFacade(AbstractLogFacade):
     @classmethod
     @transaction.atomic
     def create(cls, level: int, message: Any, context: Any) -> Self:
-        entry = ResilientLogEntry.objects.create(level=level, message=message, context=context)
+        entry = ResilientLogEntry.objects.create(
+            level=level,
+            message=message,
+            context=context,
+        )
+
         return cls(entry)
-    
+
     @override
     @classmethod
     @transaction.atomic
-    def get_unsent_entries(cls, chunk_size: int) -> Generator[AbstractLogFacade, None, None]:
+    def get_unsent_entries(cls, chunk_size: int) -> Generator[
+        AbstractLogFacade,
+        None,
+        None,
+    ]:
         entries = (
             ResilientLogEntry
                 .objects

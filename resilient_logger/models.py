@@ -11,4 +11,5 @@ class ResilientLogEntry(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, verbose_name=_("created at"))
 
     class Meta:
-        verbose_name_plural = "resilient log entries"
+        verbose_name = _("resilient log entry")
+        verbose_name_plural = _("resilient log entries")

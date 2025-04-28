@@ -1,13 +1,12 @@
-from abc import abstractmethod
-from django.db import transaction
-
 import logging
 import os
+from abc import abstractmethod
+from typing import Any, Dict, Generator, List, Optional, Type, TypedDict
 
-from typing import Any, Dict, List, Optional, Generator, Type, TypedDict
+from apscheduler.schedulers.background import BackgroundScheduler
+from django.db import transaction
 
 from resilient_logger.abstract_log_facade import AbstractLogFacade
-from apscheduler.schedulers.background import BackgroundScheduler
 
 logger = logging.getLogger(__name__)
 
@@ -37,8 +36,9 @@ _default_clear_sent_entries_trigger = IntervalOptions({
 
 class AbstractSubmitter:
     """
-    Abstract base class for different submitters. By design, does not use any implementation specific
-    storages or submit targets. Those are defined by sub-classes and runtime provided log_facade class.
+    Abstract base class for different submitters. By design, does not use
+    any implementation specific storages or submit targets. Those are defined
+    by sub-classes and runtime provided log_facade class.
     """
     _batch_limit: int
     _chunk_size: int
@@ -49,20 +49,24 @@ class AbstractSubmitter:
             log_facade: Type[AbstractLogFacade],
             batch_limit: int = 5000,
             chunk_size: int = 500,
-            submit_unsent_entries_trigger: Optional[IntervalOptions] = _default_submit_unsent_entries_trigger,
-            clear_sent_entries_trigger: Optional[IntervalOptions] = _default_clear_sent_entries_trigger,
+            submit_unsent_entries_trigger: Optional[IntervalOptions] =
+                _default_submit_unsent_entries_trigger,
+            clear_sent_entries_trigger: Optional[IntervalOptions] =
+                _default_clear_sent_entries_trigger,
     ) -> None:
         self._log_facade = log_facade
         self._batch_limit = batch_limit
         self._chunk_size = chunk_size
 
         if not submit_unsent_entries_trigger:
-            logger.info("NOT scheduling submit_entries, submit_unsent_entries_trigger is set to None.")
+            logger.info("Skipping submit_entries scheduling.")
 
         if not clear_sent_entries_trigger:
-            logger.info("NOT scheduling clear_old_entries, clear_sent_entries_trigger is set to None.")
+            logger.info("Skipping clear_old_entries scheduling.")
 
-        if (submit_unsent_entries_trigger or clear_sent_entries_trigger) and self.should_schedule():
+        have_some_trigger = submit_unsent_entries_trigger or clear_sent_entries_trigger
+
+        if have_some_trigger and self.should_schedule():
             scheduler = BackgroundScheduler()
             scheduler.start()
 
@@ -90,16 +94,19 @@ class AbstractSubmitter:
 
     @abstractmethod
     def _submit_entry(self, entry: AbstractLogFacade) -> Optional[str]:
-        """This method is different for each submitter, so it's required to override this."""
+        """
+        This method is different for each submitter,
+        so it's required to override this.
+        """
         return NotImplemented
-    
+
     @transaction.atomic
     def submit_entry(self, entry: AbstractLogFacade) -> Optional[str]:
         result_id = self._submit_entry(entry)
         if result_id is not None:
             entry.mark_sent()
             return result_id
-        
+
         return None
 
     def submit(self, level: int, message: Any, context: Any) -> Optional[str]:
@@ -112,7 +119,7 @@ class AbstractSubmitter:
 
         for count, entry in enumerate(self.get_unsent_entries()):
             if count >= self._batch_limit:
-                print(f"Job limit of {self._batch_limit} logs reached, stopping...")
+                logger.info(f"Job limit of {self._batch_limit} logs reached.")
                 break
 
             result_id = self.submit_entry(entry)
@@ -125,14 +132,14 @@ class AbstractSubmitter:
 
     def get_unsent_entries(self) -> Generator[AbstractLogFacade, None, None]:
         return self.get_log_facade().get_unsent_entries(self._chunk_size)
-    
+
     def clear_sent_entries(self, days_to_keep: int = 30) -> None:
         return self.get_log_facade().clear_sent_entries(days_to_keep)
-    
+
     def get_log_facade(self) -> Type[AbstractLogFacade]:
         if not self._log_facade:
             raise Exception("self._log_facade is None, cannot proceed without it.")
-        
+
         return self._log_facade
 
     @staticmethod
@@ -141,4 +148,4 @@ class AbstractSubmitter:
             os.environ['SUBMITTER_SCHEDULED'] = 'True'
             return True
 
-        return False 
+        return False

@@ -13,9 +13,11 @@ def test_resilient_logger_admin_message_prettified(superuser):
     model_admin = ResilientLogEntryAdmin(ResilientLogEntry, AdminSite())
     assert list(model_admin.get_fields(request)) == [
         "id",
-        "created_at",
         "is_sent",
+        "level",
+        "created_at",
         "message_prettified",
+        "context_prettified",
     ]
 
 

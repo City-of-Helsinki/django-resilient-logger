@@ -1,5 +1,5 @@
-from importlib import import_module
 import logging
+from importlib import import_module
 from typing import Type, TypeVar
 
 BUILTIN_LOG_RECORD_ATTRS = {
@@ -43,7 +43,7 @@ def dynamic_class(type: Type[TClass], class_path: str) -> Type[TClass]:
 
     if not issubclass(cls, type):
         raise Exception(f"Class '{class_path}' is not sub-class of the {type}.")
-    
+
     return cls
 
 def get_log_record_extra(record: logging.LogRecord):

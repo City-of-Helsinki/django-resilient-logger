@@ -1,8 +1,10 @@
 import logging
 import uuid
 from typing import Optional, Type, override
+
 from resilient_logger.abstract_log_facade import AbstractLogFacade
 from resilient_logger.abstract_submitter import AbstractSubmitter
+
 
 class ProxySubmitter(AbstractSubmitter):
     """
@@ -18,8 +20,13 @@ class ProxySubmitter(AbstractSubmitter):
     ) -> None:
         super().__init__(log_facade, batch_limit, chunk_size)
         self._logger = logging.getLogger(name)
-    
+
     @override
     def _submit_entry(self, entry: AbstractLogFacade) -> Optional[str]:
-        self._logger.log(entry.get_level(), entry.get_message(), extra=entry.get_context() or {})
+        self._logger.log(
+            entry.get_level(),
+            entry.get_message(),
+            extra=entry.get_context() or {}
+        )
+
         return str(uuid.uuid4())

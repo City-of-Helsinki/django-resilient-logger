@@ -12,8 +12,15 @@ logger = logging.getLogger(__name__)
 
 @admin.register(ResilientLogEntry)
 class ResilientLogEntryAdmin(admin.ModelAdmin):
-    exclude = ("message",)
-    readonly_fields = ("id", "created_at", "is_sent", "message_prettified")
+    exclude = ("message", "context")
+    readonly_fields = (
+        "id",
+        "is_sent",
+        "level",
+        "created_at",
+        "message_prettified",
+        "context_prettified",
+    )
     list_display = ("id", "__str__", "created_at", "is_sent")
     list_filter = ("created_at", "is_sent")
 
@@ -35,4 +42,11 @@ class ResilientLogEntryAdmin(admin.ModelAdmin):
         """Format the message to be a bit a more user-friendly."""
         message = json.dumps(instance.message, indent=2, sort_keys=True)
         content = f"<pre>{escape(message)}</pre>"
+        return mark_safe(content)
+
+    @admin.display(description="context")
+    def context_prettified(self, instance):
+        """Format the context to be a bit a more user-friendly."""
+        context = json.dumps(instance.context, indent=2, sort_keys=True)
+        content = f"<pre>{escape(context)}</pre>"
         return mark_safe(content)
