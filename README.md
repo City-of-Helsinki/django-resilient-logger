@@ -26,8 +26,13 @@ LOGGING = {
             'class': 'resilient_logger.handlers.ResilientLogHandler',
             'formatter': 'json',
             'submitter': {
-                'class': 'resilient_logger.proxy_submitter.ProxySubmitter',
-                'name': 'proxy-submitter'
+                'class': 'resilient_logger.elasticsearch_submitter.ElasticsearchSubmitter',
+                'es_host': 'elasticsearch-address',
+                'es_port': 'elasticsearch-port',
+                'es_scheme': 'https,
+                'es_username': 'username',
+                'es_password': 'password,
+                'es_index': 'elasticsearch-index',
             },
             'log_facade': {
                 'class': 'resilient_logger.resilient_log_facade.ResilientLogFacade',

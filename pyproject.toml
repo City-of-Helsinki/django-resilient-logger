@@ -27,3 +27,9 @@ DJANGO_SETTINGS_MODULE = "resilient_logger.tests.settings"
 [tool.coverage.run]
 source = ["resilient_logger"]
 omit = ["resilient_logger/migrations/*", "*/tests/*"]
+
+[tool.mypy]
+plugins = ["mypy_django_plugin.main"]
+
+[tool.django-stubs]
+django_settings_module = "myproject.settings"
