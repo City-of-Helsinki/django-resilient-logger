@@ -1,0 +1,83 @@
+[project]
+name = "django-resilient-logger"
+version = "0.1.0"
+authors = [{ name = "City of Helsinki", email = "dev@hel.fi" }]
+description = "A module that fixes provides django-specific resilient logger module."
+readme = "README.md"
+requires-python = ">=3.9"
+keywords = [
+    "django",
+    "logging",
+    "extra tools",
+    "plugin extension",
+]
+classifiers = [
+    "Environment :: Web Environment",
+    "Framework :: Django",
+    "Framework :: Django :: 4.2",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Internet :: WWW/HTTP",
+    "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
+]
+license = "MIT"
+license-files = ["LICENSE"]
+dependencies = [
+  "django>=4.2",
+  "apscheduler>=3.0.0",
+  "elasticsearch>=8.0.0"
+]
+
+[project.urls]
+Homepage = "https://github.com/City-of-Helsinki/django-resilient-logger"
+Issues = "https://github.com/City-of-Helsinki/django-resilient-logger/issues"
+
+[project.optional-dependencies]
+test = ["pytest", "pytest-django"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.sdist]
+include = ["resilient_logger/*.py"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["resilient_logger"]
+
+[tool.ruff]
+target-version = "py39"
+
+[tool.ruff.lint]
+select = [
+    # Pyflakes
+    "F",
+    # pycodestyle
+    "E",
+    "W",
+    # isort
+    "I",
+    # pep8-naming
+    "N",
+    # flake8-bugbear without opinionated rules
+    "B0",
+    # flake8-pie
+    "PIE",
+    # flake8-print
+    "T20",
+]
+extend-per-file-ignores = { "./tests/*" = ["E501"] }
+
+[tool.pytest.ini_options]
+pythonpath = "."
+DJANGO_SETTINGS_MODULE = "tests.settings"
+norecursedirs = [".git", "venv"]
