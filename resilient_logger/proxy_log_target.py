@@ -18,8 +18,9 @@ class ProxyLogTarget(AbstractLogTarget):
 
     @override
     def submit(self, entry: AbstractLogSource) -> Optional[str]:
-        self._logger.log(
-            entry.get_level(), entry.get_message(), extra=entry.get_context() or {}
-        )
+        level = entry.get_level() or logging.INFO
+        message = entry.get_message()
+        context = entry.get_context() or {}
 
+        self._logger.log(level, message, extra=context)
         return str(uuid.uuid4())
