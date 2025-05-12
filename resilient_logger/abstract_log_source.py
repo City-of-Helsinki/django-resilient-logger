@@ -1,20 +1,21 @@
 from abc import abstractmethod
-from typing import Any, Generator, Self, Union
+from typing import Any, Generator, List, Optional, Self, Union
 
 
-class AbstractLogFacade:
+class AbstractLogSource:
     """
     Abstract base class (interface) that defines the method signatures.
     This is required because Django will not work if we import something
     that relies on Models too early.
     """
+
     @abstractmethod
     def get_id(self) -> Union[str, int]:
         return NotImplemented
 
     @abstractmethod
-    def get_level(self) -> int:
-        return NotImplemented
+    def get_level(self) -> Optional[int]:
+        return None
 
     @abstractmethod
     def get_message(self) -> Any:
@@ -34,15 +35,10 @@ class AbstractLogFacade:
 
     @classmethod
     @abstractmethod
-    def create(cls, level: int, message: Any, context: Any) -> Self:
-        return NotImplemented
-
-    @classmethod
-    @abstractmethod
     def get_unsent_entries(cls, chunk_size: int) -> Generator[Self, None, None]:
         return NotImplemented
 
     @classmethod
     @abstractmethod
-    def clear_sent_entries(cls, days_to_keep: int = 30) -> None:
+    def clear_sent_entries(cls, days_to_keep: int = 30) -> List[str]:
         return NotImplemented

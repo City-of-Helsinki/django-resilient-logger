@@ -1,3 +1,118 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "django-resilient-logger"
+authors = [{ name = "City of Helsinki", email = "dev@hel.fi" }]
+description = "A module that provides django-specific resilient logger module."
+readme = "README.md"
+version = "0.1.5"
+keywords=[
+    "django",
+    "logging",
+    "plugin extension",
+]
+classifiers=[
+    "Environment :: Web Environment",
+    "Framework :: Django",
+    "Framework :: Django :: 4.2",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Internet :: WWW/HTTP",
+    "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
+]
+license = "MIT"
+license-files = ["LICENSE"]
+dependencies = ["django>=4.2", "elasticsearch>=8.0.0"]
+
+
+[project.optional-dependencies]
+test = [
+    "pytest",
+    "pytest-django",
+    "coverage-enable-subprocess",
+    "coverage[toml]",
+    "pytest-randomly",
+    "pytest-rerunfailures",
+    "pytest-xdist[psutil]",
+]
+
+[project.urls]
+Homepage = "https://github.com/City-of-Helsinki/django-resilient-logger"
+Issues = "https://github.com/City-of-Helsinki/django-resilient-logger/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["resilient_logger"]
+
+[tool.hatch.version]
+path = "resilient_logger/__init__.py"
+
+[tool.hatch.envs.default]
+dependencies = [
+    "pre-commit",
+]
+features = ["test"]
+python = "3.9"
+type = "virtual"
+path = ".venv"
+
+[tool.hatch.envs.default.scripts]
+test = "pytest {args}"
+lint = [
+    "pre-commit install",
+    "pre-commit run -a",
+]
+manage = "tests/manage.py {args}"
+
+[tool.hatch.envs.hatch-test]
+default-args = ["tests"]
+features = ["test"]
+matrix-name-format = "dj{value}"
+parallel = false
+randomize = true
+
+[[tool.hatch.envs.hatch-test.matrix]]
+python = ["3.9"]
+django = ["4.2"]
+
+[[tool.hatch.envs.hatch-test.matrix]]
+python = ["3.10", "3.11", "3.12"]
+django = ["4.2", "5.0", "5.1", "5.2"]
+
+[[tool.hatch.envs.hatch-test.matrix]]
+python = ["3.13"]
+django = ["5.1", "5.2"]
+
+[tool.hatch.envs.hatch-test.overrides]
+matrix.django.dependencies = [
+    { value = "django~={matrix:django}" },
+]
+
+[tool.hatch.envs.hatch-test.scripts]
+run = [
+    "pytest{env:HATCH_TEST_ARGS:} {args}",
+]
+run-cov = "coverage run -m pytest{env:HATCH_TEST_ARGS:} {args}"
+cov-combine = "coverage combine"
+cov-report = "coverage report"
+
+[tool.pytest.ini_options]
+django_find_project = false
+testpaths = [
+    "tests",
+]
+DJANGO_SETTINGS_MODULE = "tests.settings"
+pythonpath = "."
+
 [tool.ruff]
 target-version = "py39"
 
@@ -20,9 +135,6 @@ select = [
     "T20",
 ]
 extend-per-file-ignores = { "*/migrations/*" = ["E501"], "*/tests/*" = ["E501"] }
-
-[tool.pytest.ini_options]
-DJANGO_SETTINGS_MODULE = "resilient_logger.tests.settings"
 
 [tool.coverage.run]
 source = ["resilient_logger"]

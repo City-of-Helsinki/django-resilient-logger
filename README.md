@@ -1,13 +1,13 @@
 # Logger that ensures that logs sent out to external service.
 
-`django-resilient-logger` is a logger module that stores logs in local DB and submits those as soon as possible.
-If for some reason submission to external service does not work at the time of logging, scheduled task will try to re-submit
-it at later time. Scheduled tasks requires external trigger calling those. See: https://django-extensions.readthedocs.io/en/latest/jobs_scheduling.html
+`django-resilient-logger` is a logger module that stores logs in local DB and synchronizes those with external log target.
+If for some reason synchronization to external service does not work at the given time, it will retry it at later time. 
+Management tasks requires external cron trigger.
 
 To manually trigger the scheduled tasks, one can run commands:
 ```bash
-python ./manage.py runjob submit_unsent_entries
-python ./manage.py runjob clear_sent_entries
+python ./manage.py submit_unsent_entries
+python ./manage.py clear_sent_entries
 ```
 
 ## Adding django-resilient-logger your Django project
@@ -16,12 +16,11 @@ Add `django-resilient-logger` in your project's dependencies.
 
 ### Adding django-resilient-logger Django apps
 
-To install this logger, append `resilient_logger` and it's dependency `django_extensions` to `INSTALLED_APPS` in settings.py:
+To install this logger, append `resilient_logger` to `INSTALLED_APPS` in settings.py:
 
 ```python
 INSTALLED_APPS = (
-    'resilient_logger',
-    'django_extensions,
+    'resilient_logger'
     ...
 )
 ```
@@ -29,28 +28,35 @@ INSTALLED_APPS = (
 ### Configuring resilient_logger
 
 To configure resilient logger, you must provide config section in your settings.py.
-Configuration must contain `submitter` and `log_facade` keys, `jobs` being optional
-and (both keys defaulting to True). Both `submitter` and `log_facade` expects full
-class path to actual implementation. `submitter` accept also other constructor parameters.
+
+Configuration must contain required `origin`, `environment`, `sources` and `targets` keys. It also accepts optional keys `batch_limit`, `chunk_size`, `clear_sent_entries` and `submit_unsent_entries`.
+- `origin` is the name of the application or unique identifier of it.
+- `environment` is the name of the environment where the application is running.
+- `sources` expects array of objects with property `class` (full class path) being present. Other properties are ignored.
+- `targets` expects array of objects with `class` (full class path) and being present. Others are passed as constructor parameters.
+
 
 ```python
 RESILIENT_LOGGER = {
-    'submitter': {
-        'class': 'resilient_logger.elasticsearch_submitter.ElasticsearchSubmitter',
+    'origin': 'NameOfTheApplication',
+    'environment': 'dev',
+    'sources': [{
+        'class': 'resilient_logger.resilient_log_source.ResilientLogSource',
+    }],
+    'targets': [{
+        'class': 'resilient_logger.elasticsearch_log_target.ElasticsearchLogTarget',
         'es_host': 'ELASTICSEARCH_HOST',
         'es_port': 'ELASTICSEARCH_PORT',
         'es_scheme': 'ELASTICSEARCH_SCHEME',
         'es_username': 'ELASTICSEARCH_USERNAME',
         'es_password': 'ELASTICSEARCH_PASSWORD',
         'es_index': 'ELASTICSEARCH_INDEX',
-    },
-    'log_facade': {
-        'class': 'resilient_logger.resilient_log_facade.ResilientLogFacade',
-    },
-    'jobs': {
-        'submit_unsent_entries': True,
-        'clear_sent_entries': True,
-    }
+        'required': True
+    }],
+    'batch_limit': 5000,
+    'chunk_size': 500,
+    'submit_unsent_entries': True,
+    'clear_sent_entries': True,
 }
 ```
 
@@ -61,10 +67,15 @@ LOGGING = {
     'handlers': {
         'resilient': {
             'class': 'resilient_logger.handlers.ResilientLogHandler',
-            'formatter': 'json',
+            ...
         }
         ...
-    }
+    },
+    'loggers': {
+        '': {
+            'handlers': ['resilient'],
+            ...
+        },
     ...
 }
 ```

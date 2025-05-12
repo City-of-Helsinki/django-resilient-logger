@@ -1,65 +1,72 @@
 import logging
 from importlib import import_module
-from typing import Any, Dict, Type, TypedDict, TypeVar
+from typing import Any, Dict, List, Type, TypedDict, TypeVar
 
 from django.conf import settings
+from functools import cache
 
+from resilient_logger.missing_context_error import MissingContextError
 
-class ResilientLoggerJobsConfig(TypedDict):
-  submit_unsent_entries: bool
-  clear_sent_entries: bool
 
 class ResilientLoggerConfig(TypedDict):
-  submitter: Dict[str, Any]
-  log_facade: Dict[str, Any]
-  jobs: ResilientLoggerJobsConfig
+    origin: str
+    environment: str
+    batch_limit: int
+    chunk_size: int
+    submit_unsent_entries: bool
+    clear_sent_entries: bool
+    sources: List[Dict[str, Any]]
+    targets: List[Dict[str, Any]]
 
-_default_jobs_config: ResilientLoggerJobsConfig = {
-    'clear_sent_entries': True,
-    'submit_unsent_entries': True,
+
+_default_config: ResilientLoggerConfig = {
+    "origin": "",
+    "environment": "",
+    "batch_limit": 5000,
+    "chunk_size": 500,
+    "clear_sent_entries": True,
+    "submit_unsent_entries": True,
+    "sources": [],
+    "targets": [],
 }
 
 BUILTIN_LOG_RECORD_ATTRS = {
-    'args',
-    'asctime',
-    'created',
-    'exc_info',
-    'exc_text',
-    'filename',
-    'funcName',
-    'levelname',
-    'levelno',
-    'lineno',
-    'module',
-    'msecs',
-    'message',
-    'msg',
-    'name',
-    'pathname',
-    'process',
-    'processName',
-    'relativeCreated',
-    'stack_info',
-    'taskName',
-    'thread',
-    'threadName',
+    "args",
+    "asctime",
+    "created",
+    "exc_info",
+    "exc_text",
+    "filename",
+    "funcName",
+    "levelname",
+    "levelno",
+    "lineno",
+    "module",
+    "msecs",
+    "message",
+    "msg",
+    "name",
+    "pathname",
+    "process",
+    "processName",
+    "relativeCreated",
+    "stack_info",
+    "taskName",
+    "thread",
+    "threadName",
 }
 
-RESILIENT_LOGGER_CONFIG_REQUIRED_KEYS = [
-    "submitter",
-    "log_facade",
-]
-
 TClass = TypeVar("TClass")
+
 
 def dynamic_class(type: Type[TClass], class_path: str) -> Type[TClass]:
     """
     Loads dynamically class of given type from class_path
     and ensures it's sub-class of given input type.
     """
-    parts = class_path.split('.')
+    parts = class_path.split(".")
     class_name = parts.pop()
-    module_name = '.'.join(parts)
+    module_name = ".".join(parts)
     module = import_module(module_name)
     cls = getattr(module, class_name)
 
@@ -67,6 +74,7 @@ def dynamic_class(type: Type[TClass], class_path: str) -> Type[TClass]:
         raise Exception(f"Class '{class_path}' is not sub-class of the {type}.")
 
     return cls
+
 
 def get_log_record_extra(record: logging.LogRecord):
     """Returns `extra` passed to the logger."""
@@ -76,6 +84,19 @@ def get_log_record_extra(record: logging.LogRecord):
         if name not in BUILTIN_LOG_RECORD_ATTRS
     }
 
+
+def assert_required_extras(extra: Dict[str, Any], required_fields: List[str]) -> None:
+    missing_fields: List[str] = []
+
+    for required_field in required_fields:
+        if extra.get(required_field, None) is None:
+            missing_fields.append(required_field)
+
+    if missing_fields:
+        raise MissingContextError(missing_fields)
+
+
+@cache
 def get_resilient_logger_config() -> ResilientLoggerConfig:
     config: ResilientLoggerConfig = settings.RESILIENT_LOGGER
 
@@ -85,16 +106,14 @@ def get_resilient_logger_config() -> ResilientLoggerConfig:
     if not isinstance(config, Dict):
         raise Exception("RESILIENT_LOGGER is not proper dictionary")
 
-    for key in RESILIENT_LOGGER_CONFIG_REQUIRED_KEYS:
-        value = config.get(key, None)
+    if not isinstance(config["sources"], List):
+        raise Exception(f"RESILIENT_LOGGER['sources'] is not instance of list")
 
-        if not value:
-            raise Exception(f"RESILIENT_LOGGER is missing required '{key}' config")
+    if not isinstance(config["targets"], List):
+        raise Exception(f"RESILIENT_LOGGER['targets'] is not instance of list")
 
-        if not isinstance(value, Dict):
-            raise Exception(f"RESILIENT_LOGGER[{key}] is not proper dictionary")
-
-    # Add default values to jobs section if it skipped some.
-    config['jobs'] = _default_jobs_config | config.get('jobs', {})
+    for key, default_value in _default_config.items():
+        # Add default values to jobs section if it skipped some.
+        config[key] = config.get(key, default_value)
 
     return config

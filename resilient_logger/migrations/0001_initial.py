@@ -4,25 +4,26 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='ResilientLogEntry',
+            name="ResilientLogEntry",
             fields=[
-                ('id', models.AutoField(primary_key=True, serialize=False)),
-                ('is_sent', models.BooleanField(default=False, verbose_name='is sent')),
-                ('level', models.IntegerField(default=0, verbose_name='level')),
-                ('message', models.JSONField(verbose_name='message')),
-                ('context', models.JSONField(null=True, verbose_name='context')),
-                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='created at')),
+                ("id", models.AutoField(primary_key=True, serialize=False)),
+                ("is_sent", models.BooleanField(default=False, verbose_name="is sent")),
+                ("level", models.IntegerField(default=0, verbose_name="level")),
+                ("message", models.JSONField(verbose_name="message")),
+                ("context", models.JSONField(null=True, verbose_name="context")),
+                (
+                    "created_at",
+                    models.DateTimeField(auto_now_add=True, verbose_name="created at"),
+                ),
             ],
             options={
-                'verbose_name_plural': 'resilient log entries',
+                "verbose_name_plural": "resilient log entries",
             },
         ),
     ]

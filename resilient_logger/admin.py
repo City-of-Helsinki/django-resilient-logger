@@ -10,6 +10,7 @@ from resilient_logger.models import ResilientLogEntry
 
 logger = logging.getLogger(__name__)
 
+
 @admin.register(ResilientLogEntry)
 class ResilientLogEntryAdmin(admin.ModelAdmin):
     exclude = ("message", "context")
