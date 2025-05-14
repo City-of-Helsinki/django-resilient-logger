@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Dict, Generator, List, Optional, Self, Type
+from typing import Generator, TypeVar
 
 from django.db import transaction
 
@@ -9,19 +9,21 @@ from resilient_logger.utils import dynamic_class, get_resilient_logger_config
 
 logger = logging.getLogger(__name__)
 
+TResilientLogger = TypeVar("ResilientLogger")
+
 
 class ResilientLogger:
     _batch_limit: int
     _chunk_size: int
-    _log_sources: List[Type[AbstractLogSource]]
-    _log_targets: List[AbstractLogTarget]
+    _log_sources: list[type[AbstractLogSource]]
+    _log_targets: list[AbstractLogTarget]
 
     def __init__(
         self,
         batch_limit: int,
         chunk_size: int,
-        log_sources: List[Type[AbstractLogSource]],
-        log_targets: List[AbstractLogTarget],
+        log_sources: list[type[AbstractLogSource]],
+        log_targets: list[AbstractLogTarget],
     ) -> None:
         self._batch_limit = batch_limit
         self._chunk_size = chunk_size
@@ -29,15 +31,15 @@ class ResilientLogger:
         self._log_targets = log_targets
 
     @classmethod
-    def create(cls) -> Self:
+    def create(cls: TResilientLogger) -> TResilientLogger:
         settings = get_resilient_logger_config()
         batch_limit = settings.get("batch_limit")
         chunk_size = settings.get("chunk_size")
         sources = settings.get("sources", []).copy()
         targets = settings.get("targets", []).copy()
 
-        list_sources: List[Type[AbstractLogSource]] = []
-        list_targets: List[AbstractLogTarget] = []
+        list_sources: list[type[AbstractLogSource]] = []
+        list_targets: list[AbstractLogTarget] = []
 
         for source in sources:
             source_args = source.copy()
@@ -69,8 +71,8 @@ class ResilientLogger:
         return True
 
     @transaction.atomic
-    def submit_unsent_entries(self) -> Dict[str, bool]:
-        results: Dict[str, bool] = {}
+    def submit_unsent_entries(self) -> dict[str, bool]:
+        results: dict[str, bool] = {}
 
         for count, entry in enumerate(self.get_unsent_entries()):
             if count >= self._batch_limit:
@@ -90,8 +92,8 @@ class ResilientLogger:
             for entry in log_source.get_unsent_entries(self._chunk_size):
                 yield entry
 
-    def clear_sent_entries(self, days_to_keep: int = 30) -> List[str]:
-        deleted_ids: List[str] = []
+    def clear_sent_entries(self, days_to_keep: int = 30) -> list[str]:
+        deleted_ids: list[str] = []
 
         for log_source in self._log_sources:
             deleted_ids += log_source.clear_sent_entries(days_to_keep)

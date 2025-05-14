@@ -1,9 +1,9 @@
 import logging
+from functools import cache
 from importlib import import_module
-from typing import Any, Dict, List, Type, TypedDict, TypeVar
+from typing import Any, TypedDict, TypeVar
 
 from django.conf import settings
-from functools import cache
 
 from resilient_logger.missing_context_error import MissingContextError
 
@@ -15,8 +15,8 @@ class ResilientLoggerConfig(TypedDict):
     chunk_size: int
     submit_unsent_entries: bool
     clear_sent_entries: bool
-    sources: List[Dict[str, Any]]
-    targets: List[Dict[str, Any]]
+    sources: list[dict[str, Any]]
+    targets: list[dict[str, Any]]
 
 
 _default_config: ResilientLoggerConfig = {
@@ -59,7 +59,7 @@ BUILTIN_LOG_RECORD_ATTRS = {
 TClass = TypeVar("TClass")
 
 
-def dynamic_class(type: Type[TClass], class_path: str) -> Type[TClass]:
+def dynamic_class(type: type[TClass], class_path: str) -> type[TClass]:
     """
     Loads dynamically class of given type from class_path
     and ensures it's sub-class of given input type.
@@ -85,8 +85,8 @@ def get_log_record_extra(record: logging.LogRecord):
     }
 
 
-def assert_required_extras(extra: Dict[str, Any], required_fields: List[str]) -> None:
-    missing_fields: List[str] = []
+def assert_required_extras(extra: dict[str, Any], required_fields: list[str]) -> None:
+    missing_fields: list[str] = []
 
     for required_field in required_fields:
         if extra.get(required_field, None) is None:
@@ -98,19 +98,19 @@ def assert_required_extras(extra: Dict[str, Any], required_fields: List[str]) ->
 
 @cache
 def get_resilient_logger_config() -> ResilientLoggerConfig:
-    config: ResilientLoggerConfig = settings.RESILIENT_LOGGER
+    config: ResilientLoggerConfig = getattr(settings, "RESILIENT_LOGGER", None)
 
     if not config:
-        raise Exception("RESILIENT_LOGGER setting is missing")
+        raise RuntimeError("RESILIENT_LOGGER setting is missing")
 
-    if not isinstance(config, Dict):
-        raise Exception("RESILIENT_LOGGER is not proper dictionary")
+    if not isinstance(config, dict):
+        raise RuntimeError("RESILIENT_LOGGER is not proper dictionary")
 
-    if not isinstance(config["sources"], List):
-        raise Exception(f"RESILIENT_LOGGER['sources'] is not instance of list")
+    if not isinstance(config.get("sources", None), list):
+        raise RuntimeError("RESILIENT_LOGGER['sources'] is not instance of list")
 
-    if not isinstance(config["targets"], List):
-        raise Exception(f"RESILIENT_LOGGER['targets'] is not instance of list")
+    if not isinstance(config.get("targets", None), list):
+        raise RuntimeError("RESILIENT_LOGGER['targets'] is not instance of list")
 
     for key, default_value in _default_config.items():
         # Add default values to jobs section if it skipped some.

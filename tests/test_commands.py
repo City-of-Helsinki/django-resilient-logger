@@ -1,11 +1,11 @@
 import logging
+
+import pytest
 from django.core.management import call_command
 from django.test import TestCase, override_settings
-import pytest
 
-from tests.testdata.testconfig import VALID_CONFIG_ALL_FIELDS
 from resilient_logger.resilient_log_source import ResilientLogSource
-
+from tests.testdata.testconfig import VALID_CONFIG_ALL_FIELDS
 
 logger = logging.getLogger(__name__)
 

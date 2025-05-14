@@ -1,10 +1,9 @@
-from typing import override
+import logging
 
 from elasticsearch import Elasticsearch
 
 from resilient_logger.abstract_log_source import AbstractLogSource
 from resilient_logger.abstract_log_target import AbstractLogTarget
-import logging
 
 # Constants
 ES_STATUS_CREATED = "created"
@@ -38,7 +37,6 @@ class ElasticsearchLogTarget(AbstractLogTarget):
             basic_auth=(es_username, es_password),
         )
 
-    @override
     def submit(self, entry: AbstractLogSource) -> bool:
         document = entry.get_context()
         message = entry.get_message()

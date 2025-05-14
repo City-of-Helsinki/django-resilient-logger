@@ -1,14 +1,14 @@
 import logging
-from django.test import TestCase, override_settings
 from contextlib import nullcontext as does_not_raise
+
 import pytest
+from django.test import TestCase, override_settings
 
 from resilient_logger.handlers import ResilientLogHandler
 from resilient_logger.missing_context_error import MissingContextError
 from tests.testdata.testconfig import (
     VALID_CONFIG_ALL_FIELDS,
 )
-
 
 without_required_fields_with_extras = ([], {"foo": "bar"}, does_not_raise())
 without_required_fields_without_extras = ([], {}, does_not_raise())

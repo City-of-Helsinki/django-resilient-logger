@@ -1,33 +1,30 @@
 from datetime import timedelta
-from typing import Any, Generator, List, Optional, Self, Union, override
-from resilient_logger.abstract_log_source import AbstractLogSource
+from typing import Any, Generator
+
+from auditlog.models import LogEntry
+from django.contrib.auth.models import AbstractUser
 from django.db.models import Q
 from django.utils import timezone
-from django.contrib.auth.models import AbstractUser
-from auditlog.models import LogEntry
 
+from resilient_logger.abstract_log_source import AbstractLogSource, TAbstractLogSource
 from resilient_logger.utils import get_resilient_logger_config
 
 
 class DjangoAuditLogSource(AbstractLogSource):
     log: LogEntry
 
-    @override
     def __init__(self, log: LogEntry):
         self.log = log
 
-    @override
-    def get_id(self) -> Union[str, int]:
+    def get_id(self) -> str | int:
         return self.log.object_pk
 
-    @override
     def get_message(self) -> Any:
         return self.log.changes_str
 
-    @override
     def get_context(self) -> Any:
         config = get_resilient_logger_config()
-        actor: Optional[AbstractUser] = self.log.actor
+        actor: AbstractUser | None = self.log.actor
 
         return {
             "@timestamp": self.log.timestamp,
@@ -44,14 +41,12 @@ class DjangoAuditLogSource(AbstractLogSource):
             },
         }
 
-    @override
     def is_sent(self) -> bool:
         if self.log.additional_data is None:
             return False
 
-        return self.log.additional_data["is_sent"] == True
+        return self.log.additional_data["is_sent"]
 
-    @override
     def mark_sent(self) -> None:
         if self.log.additional_data is None:
             self.log.additional_data = {}
@@ -59,9 +54,10 @@ class DjangoAuditLogSource(AbstractLogSource):
         self.log.additional_data["is_sent"] = True
         self.log.save(update_fields=["additional_data"])
 
-    @override
     @classmethod
-    def get_unsent_entries(cls, chunk_size: int) -> Generator[Self, None, None]:
+    def get_unsent_entries(
+        cls: TAbstractLogSource, chunk_size: int
+    ) -> Generator[TAbstractLogSource, None, None]:
         entries = (
             LogEntry.objects.select_related("actor")
             .filter(
@@ -78,9 +74,10 @@ class DjangoAuditLogSource(AbstractLogSource):
         for entry in entries:
             yield DjangoAuditLogSource(entry)
 
-    @override
     @classmethod
-    def clear_sent_entries(cls, days_to_keep: int = 30) -> List[str]:
+    def clear_sent_entries(
+        cls: TAbstractLogSource, days_to_keep: int = 30
+    ) -> list[str]:
         entries = LogEntry.objects.filter(
             ~Q(additional_data__has_key="is_sent")  # support old entries
             | Q(additional_data__is_sent=True),

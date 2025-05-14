@@ -1,5 +1,5 @@
-from django.test import TestCase, override_settings
 import pytest
+from django.test import TestCase, override_settings
 
 from resilient_logger.utils import get_resilient_logger_config
 from tests.testdata.testconfig import (
@@ -29,10 +29,10 @@ class TestUtils(TestCase):
 
     @override_settings(RESILIENT_LOGGER=INVALID_CONFIG_MISSING_TARGETS)
     def test_invalid_config_missing_targets(self):
-        with pytest.raises(Exception):
+        with pytest.raises(RuntimeError):
             get_resilient_logger_config()
 
     @override_settings(RESILIENT_LOGGER=INVALID_CONFIG_MISSING_SOURCES)
     def test_invalid_config_missing_sources(self):
-        with pytest.raises(Exception):
+        with pytest.raises(RuntimeError):
             get_resilient_logger_config()

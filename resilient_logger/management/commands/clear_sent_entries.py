@@ -1,8 +1,9 @@
 import logging
 
+from django.core.management.base import BaseCommand, CommandError
+
 from resilient_logger.resilient_logger import ResilientLogger
 from resilient_logger.utils import get_resilient_logger_config
-from django.core.management.base import BaseCommand, CommandError
 
 logger = logging.getLogger(__name__)
 

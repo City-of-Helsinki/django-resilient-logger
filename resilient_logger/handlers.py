@@ -1,17 +1,18 @@
 import logging
-from typing import List
 
-from resilient_logger.utils import get_log_record_extra, assert_required_extras
+from resilient_logger.utils import assert_required_extras, get_log_record_extra
 
 logger = logging.getLogger(__name__)
 
 
 class ResilientLogHandler(logging.Handler):
-    required_fields: List[str]
+    required_fields: list[str]
 
-    def __init__(self, level: int = logging.NOTSET, required_fields: List[str] = []):
+    def __init__(
+        self, level: int = logging.NOTSET, required_fields: list[str] | None = None
+    ):
         super().__init__(level)
-        self.required_fields = required_fields
+        self.required_fields = required_fields or []
 
     def emit(self, record: logging.LogRecord):
         """

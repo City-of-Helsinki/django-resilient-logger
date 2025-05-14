@@ -1,5 +1,7 @@
 from abc import abstractmethod
-from typing import Any, Generator, List, Optional, Self, Union
+from typing import Any, Generator, TypeVar
+
+TAbstractLogSource = TypeVar("AbstractLogSource")
 
 
 class AbstractLogSource:
@@ -10,11 +12,11 @@ class AbstractLogSource:
     """
 
     @abstractmethod
-    def get_id(self) -> Union[str, int]:
+    def get_id(self) -> str | int:
         return NotImplemented
 
     @abstractmethod
-    def get_level(self) -> Optional[int]:
+    def get_level(self) -> int | None:
         return None
 
     @abstractmethod
@@ -35,10 +37,12 @@ class AbstractLogSource:
 
     @classmethod
     @abstractmethod
-    def get_unsent_entries(cls, chunk_size: int) -> Generator[Self, None, None]:
+    def get_unsent_entries(
+        cls: TAbstractLogSource, chunk_size: int
+    ) -> Generator[TAbstractLogSource, None, None]:
         return NotImplemented
 
     @classmethod
     @abstractmethod
-    def clear_sent_entries(cls, days_to_keep: int = 30) -> List[str]:
+    def clear_sent_entries(cls, days_to_keep: int = 30) -> list[str]:
         return NotImplemented
