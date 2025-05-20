@@ -1,8 +1,6 @@
 import logging
 from typing import Generator, TypeVar
 
-from django.db import transaction
-
 from resilient_logger.abstract_log_source import AbstractLogSource
 from resilient_logger.abstract_log_target import AbstractLogTarget
 from resilient_logger.utils import dynamic_class, get_resilient_logger_config
@@ -60,7 +58,6 @@ class ResilientLogger:
             log_targets=list_targets,
         )
 
-    @transaction.atomic
     def submit(self, source: AbstractLogSource) -> bool:
         for log_target in self._log_targets:
             submitted = log_target.submit(source)
@@ -70,7 +67,6 @@ class ResilientLogger:
 
         return True
 
-    @transaction.atomic
     def submit_unsent_entries(self) -> dict[str, bool]:
         results: dict[str, bool] = {}
 
