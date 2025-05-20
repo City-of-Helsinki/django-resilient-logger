@@ -1,9 +1,10 @@
 import logging
 
-from elasticsearch import Elasticsearch
+from elasticsearch import ConflictError, Elasticsearch
 
 from resilient_logger.abstract_log_source import AbstractLogSource
 from resilient_logger.abstract_log_target import AbstractLogTarget
+from resilient_logger.utils import content_hash, create_target_document
 
 # Constants
 ES_STATUS_CREATED = "created"
@@ -38,26 +39,28 @@ class ElasticsearchLogTarget(AbstractLogTarget):
         )
 
     def submit(self, entry: AbstractLogSource) -> bool:
-        document = entry.get_context()
-        message = entry.get_message()
-        log_level = entry.get_level()
+        document = create_target_document(entry)
 
-        if message is not None:
-            document["message"] = message
+        try:
+            response = self._client.index(
+                index=self._index,
+                id=content_hash(document),
+                document=document,
+                op_type="create",
+            )
 
-        if log_level is not None:
-            document["log_level"] = log_level
+            logger.info(f"Sending status: {response}")
+            result = response["result"]
 
-        response = self._client.index(
-            index=self._index,
-            id=str(entry.get_id()),
-            document=document,
-            op_type="create",
-        )
+            if result == ES_STATUS_CREATED:
+                return True
 
-        logger.info(f"Sending status: {response}")
-
-        if response.get("result") == ES_STATUS_CREATED:
+        except ConflictError:
+            """
+            The document key used to store log entry is the hash of the contents.
+            If we receive conflict error, it means that the given entry is already
+            sent to the Elasticsearch.
+            """
             return True
 
         return False
