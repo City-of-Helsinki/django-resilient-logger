@@ -2,7 +2,7 @@ import logging
 from contextlib import nullcontext as does_not_raise
 
 import pytest
-from django.test import TestCase, override_settings
+from django.test import override_settings
 
 from resilient_logger.handlers import ResilientLogHandler
 from resilient_logger.missing_context_error import MissingContextError
@@ -20,51 +20,57 @@ with_required_fields_without_extras = (
 )
 
 
-class TestHandler(TestCase):
-    @override_settings(RESILIENT_LOGGER=VALID_CONFIG_ALL_FIELDS)
-    def test_without_required_fields_with_extras(self):
-        required_fields, extra, expectation = without_required_fields_with_extras
+@pytest.mark.django_db
+@override_settings(RESILIENT_LOGGER=VALID_CONFIG_ALL_FIELDS)
+def test_without_required_fields_with_extras():
+    required_fields, extra, expectation = without_required_fields_with_extras
 
-        logger = logging.Logger(__name__)
-        logger.addHandler(
-            ResilientLogHandler(logging.INFO, required_fields=required_fields)
-        )
+    logger = logging.Logger(__name__)
+    logger.addHandler(
+        ResilientLogHandler(logging.INFO, required_fields=required_fields)
+    )
 
-        with expectation:
-            logger.info("Hello World!", extra=extra)
+    with expectation:
+        logger.info("Hello World!", extra=extra)
 
-    @override_settings(RESILIENT_LOGGER=VALID_CONFIG_ALL_FIELDS)
-    def test_without_required_fields_without_extras(self):
-        required_fields, extra, expectation = without_required_fields_without_extras
 
-        logger = logging.Logger(__name__)
-        logger.addHandler(
-            ResilientLogHandler(logging.INFO, required_fields=required_fields)
-        )
+@pytest.mark.django_db
+@override_settings(RESILIENT_LOGGER=VALID_CONFIG_ALL_FIELDS)
+def test_without_required_fields_without_extras():
+    required_fields, extra, expectation = without_required_fields_without_extras
 
-        with expectation:
-            logger.info("Hello World!", extra=extra)
+    logger = logging.Logger(__name__)
+    logger.addHandler(
+        ResilientLogHandler(logging.INFO, required_fields=required_fields)
+    )
 
-    @override_settings(RESILIENT_LOGGER=VALID_CONFIG_ALL_FIELDS)
-    def test_with_required_fields_with_extras(self):
-        required_fields, extra, expectation = with_required_fields_with_extras
+    with expectation:
+        logger.info("Hello World!", extra=extra)
 
-        logger = logging.Logger(__name__)
-        logger.addHandler(
-            ResilientLogHandler(logging.INFO, required_fields=required_fields)
-        )
 
-        with expectation:
-            logger.info("Hello World!", extra=extra)
+@pytest.mark.django_db
+@override_settings(RESILIENT_LOGGER=VALID_CONFIG_ALL_FIELDS)
+def test_with_required_fields_with_extras():
+    required_fields, extra, expectation = with_required_fields_with_extras
 
-    @override_settings(RESILIENT_LOGGER=VALID_CONFIG_ALL_FIELDS)
-    def test_with_required_fields_without_extras(self):
-        required_fields, extra, expectation = with_required_fields_without_extras
+    logger = logging.Logger(__name__)
+    logger.addHandler(
+        ResilientLogHandler(logging.INFO, required_fields=required_fields)
+    )
 
-        logger = logging.Logger(__name__)
-        logger.addHandler(
-            ResilientLogHandler(logging.INFO, required_fields=required_fields)
-        )
+    with expectation:
+        logger.info("Hello World!", extra=extra)
 
-        with expectation:
-            logger.info("Hello World!", extra=extra)
+
+@pytest.mark.django_db
+@override_settings(RESILIENT_LOGGER=VALID_CONFIG_ALL_FIELDS)
+def test_with_required_fields_without_extras():
+    required_fields, extra, expectation = with_required_fields_without_extras
+
+    logger = logging.Logger(__name__)
+    logger.addHandler(
+        ResilientLogHandler(logging.INFO, required_fields=required_fields)
+    )
+
+    with expectation:
+        logger.info("Hello World!", extra=extra)
