@@ -11,7 +11,7 @@ from tests.testdata.testconfig import (
 
 
 @pytest.fixture(autouse=True)
-def setUp():
+def setup():
     get_resilient_logger_config.cache_clear()
 
 

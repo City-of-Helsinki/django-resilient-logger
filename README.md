@@ -2,7 +2,7 @@
 
 `django-resilient-logger` is a logger module that stores logs in local DB and synchronizes those with external log target.
 If for some reason synchronization to external service does not work at the given time, it will retry it at later time. 
-Management tasks requires external cron trigger.
+Management tasks require an external cron trigger.
 
 To manually trigger the scheduled tasks, one can run commands:
 ```bash
@@ -10,22 +10,22 @@ python ./manage.py submit_unsent_entries
 python ./manage.py clear_sent_entries
 ```
 
-## Adding django-resilient-logger your Django project
+## Adding django-resilient-logger to your Django project
 
-Add `django-resilient-logger` in your project's dependencies.
+Add `django-resilient-logger` in your project"s dependencies.
 
-### Adding django-resilient-logger Django apps
+### Adding django-resilient-logger to Django apps
 
 To install this logger, append `resilient_logger` to `INSTALLED_APPS` in settings.py:
 
 ```python
 INSTALLED_APPS = (
-    'resilient_logger'
+    "resilient_logger"
     ...
 )
 ```
 
-### Configuring resilient_logger
+### Configuring django-resilient-logger
 
 To configure resilient logger, you must provide config section in your settings.py.
 
@@ -38,25 +38,25 @@ Configuration must contain required `origin`, `environment`, `sources` and `targ
 
 ```python
 RESILIENT_LOGGER = {
-    'origin': 'NameOfTheApplication',
-    'environment': 'dev',
-    'sources': [{
-        'class': 'resilient_logger.resilient_log_source.ResilientLogSource',
+    "origin": "NameOfTheApplication",
+    "environment": "dev",
+    "sources": [{
+        "class": "resilient_logger.resilient_log_source.ResilientLogSource",
     }],
-    'targets': [{
-        'class': 'resilient_logger.elasticsearch_log_target.ElasticsearchLogTarget',
-        'es_host': 'ELASTICSEARCH_HOST',
-        'es_port': 'ELASTICSEARCH_PORT',
-        'es_scheme': 'ELASTICSEARCH_SCHEME',
-        'es_username': 'ELASTICSEARCH_USERNAME',
-        'es_password': 'ELASTICSEARCH_PASSWORD',
-        'es_index': 'ELASTICSEARCH_INDEX',
-        'required': True
+    "targets": [{
+        "class": "resilient_logger.elasticsearch_log_target.ElasticsearchLogTarget",
+        "es_host": "ELASTICSEARCH_HOST",
+        "es_port": "ELASTICSEARCH_PORT",
+        "es_scheme": "ELASTICSEARCH_SCHEME",
+        "es_username": "ELASTICSEARCH_USERNAME",
+        "es_password": "ELASTICSEARCH_PASSWORD",
+        "es_index": "ELASTICSEARCH_INDEX",
+        "required": True
     }],
-    'batch_limit': 5000,
-    'chunk_size': 500,
-    'submit_unsent_entries': True,
-    'clear_sent_entries': True,
+    "batch_limit": 5000,
+    "chunk_size": 500,
+    "submit_unsent_entries": True,
+    "clear_sent_entries": True,
 }
 ```
 
@@ -64,16 +64,16 @@ In addition to the django-resilient-logger specific configuration, one must also
 In the sample below the configured logger is called `resilient` and it will use the `RESILIENT_LOGGER` configuration above:
 ```python
 LOGGING = {
-    'handlers': {
-        'resilient': {
-            'class': 'resilient_logger.handlers.ResilientLogHandler',
+    "handlers": {
+        "resilient": {
+            "class": "resilient_logger.handlers.ResilientLogHandler",
             ...
         }
         ...
     },
-    'loggers': {
-        '': {
-            'handlers': ['resilient'],
+    "loggers": {
+        "": {
+            "handlers": ["resilient"],
             ...
         },
     ...
@@ -121,18 +121,6 @@ Basic `ruff` commands:
 [`pre-commit`](https://pre-commit.com/) can be used to install and
 run all the formatting tools as git hooks automatically before a
 commit.
-
-
-## Git blame ignore refs
-
-Project includes a `.git-blame-ignore-revs` file for ignoring certain commits from `git blame`.
-This can be useful for ignoring e.g. formatting commits, so that it is more clear from `git blame`
-where the actual code change came from. Configure your git to use it for this project with the
-following command:
-
-```shell
-git config blame.ignoreRevsFile .git-blame-ignore-revs
-```
 
 
 ## Commit message format

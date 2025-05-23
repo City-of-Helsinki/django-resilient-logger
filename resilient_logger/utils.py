@@ -75,7 +75,7 @@ def dynamic_class(type: type[TClass], class_path: str) -> type[TClass]:
     cls = getattr(module, class_name)
 
     if not issubclass(cls, type):
-        raise Exception(f"Class '{class_path}' is not sub-class of the {type}.")
+        raise TypeError(f"Class '{class_path}' is not sub-class of the {type}.")
 
     return cls
 
