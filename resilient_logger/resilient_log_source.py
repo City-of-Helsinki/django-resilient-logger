@@ -49,7 +49,7 @@ class ResilientLogSource(AbstractLogSource):
     @classmethod
     @transaction.atomic
     def get_unsent_entries(
-        cls: TAbstractLogSource, chunk_size: int
+        cls: type[TAbstractLogSource], chunk_size: int
     ) -> Generator[
         TAbstractLogSource,
         None,
@@ -67,7 +67,7 @@ class ResilientLogSource(AbstractLogSource):
     @classmethod
     @transaction.atomic
     def clear_sent_entries(
-        cls: TAbstractLogSource, days_to_keep: int = 30
+        cls: type[TAbstractLogSource], days_to_keep: int = 30
     ) -> list[str]:
         entries = ResilientLogEntry.objects.filter(
             is_sent=True,

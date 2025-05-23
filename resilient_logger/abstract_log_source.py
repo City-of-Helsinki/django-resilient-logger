@@ -38,11 +38,13 @@ class AbstractLogSource:
     @classmethod
     @abstractmethod
     def get_unsent_entries(
-        cls: TAbstractLogSource, chunk_size: int
+        cls: type[TAbstractLogSource], chunk_size: int
     ) -> Generator[TAbstractLogSource, None, None]:
         return NotImplemented
 
     @classmethod
     @abstractmethod
-    def clear_sent_entries(cls, days_to_keep: int = 30) -> list[str]:
+    def clear_sent_entries(
+        cls: type[TAbstractLogSource], days_to_keep: int = 30
+    ) -> list[str]:
         return NotImplemented

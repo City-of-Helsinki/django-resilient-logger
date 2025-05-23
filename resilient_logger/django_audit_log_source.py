@@ -56,7 +56,7 @@ class DjangoAuditLogSource(AbstractLogSource):
 
     @classmethod
     def get_unsent_entries(
-        cls: TAbstractLogSource, chunk_size: int
+        cls: type[TAbstractLogSource], chunk_size: int
     ) -> Generator[TAbstractLogSource, None, None]:
         entries = (
             LogEntry.objects.select_related("actor")
@@ -76,7 +76,7 @@ class DjangoAuditLogSource(AbstractLogSource):
 
     @classmethod
     def clear_sent_entries(
-        cls: TAbstractLogSource, days_to_keep: int = 30
+        cls: type[TAbstractLogSource], days_to_keep: int = 30
     ) -> list[str]:
         entries = LogEntry.objects.filter(
             ~Q(additional_data__has_key="is_sent")  # support old entries
