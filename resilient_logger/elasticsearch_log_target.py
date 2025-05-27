@@ -40,11 +40,12 @@ class ElasticsearchLogTarget(AbstractLogTarget):
 
     def submit(self, entry: AbstractLogSource) -> bool:
         document = create_target_document(entry)
+        hash = content_hash(document)
 
         try:
             response = self._client.index(
                 index=self._index,
-                id=content_hash(document),
+                id=hash,
                 document=document,
                 op_type="create",
             )
@@ -61,6 +62,11 @@ class ElasticsearchLogTarget(AbstractLogTarget):
             If we receive conflict error, it means that the given entry is already
             sent to the Elasticsearch.
             """
+            logger.warning(
+                f"""Skipping the document with key {hash}, it's already submitted.""",
+                extra=document,
+            )
+
             return True
 
         return False

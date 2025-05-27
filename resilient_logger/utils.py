@@ -3,7 +3,7 @@ import json
 import logging
 from functools import cache
 from importlib import import_module
-from typing import Any, TypedDict, TypeVar
+from typing import Any, Optional, TypedDict, TypeVar
 
 from django.conf import settings
 from django.core.serializers.json import DjangoJSONEncoder
@@ -90,19 +90,16 @@ def get_log_record_extra(record: logging.LogRecord):
 
 
 def assert_required_extras(extra: dict[str, Any], required_fields: list[str]) -> None:
-    missing_fields: list[str] = []
-
-    for required_field in required_fields:
-        if extra.get(required_field, None) is None:
-            missing_fields.append(required_field)
-
+    missing_fields = [field for field in required_fields if extra.get(field) is None]
     if missing_fields:
         raise MissingContextError(missing_fields)
 
 
 @cache
 def get_resilient_logger_config() -> ResilientLoggerConfig:
-    config: ResilientLoggerConfig = getattr(settings, "RESILIENT_LOGGER", None)
+    config: Optional[ResilientLoggerConfig] = getattr(
+        settings, "RESILIENT_LOGGER", None
+    )
 
     if not config:
         raise RuntimeError("RESILIENT_LOGGER setting is missing")
@@ -118,7 +115,7 @@ def get_resilient_logger_config() -> ResilientLoggerConfig:
 
     for key, default_value in _default_config.items():
         # Add default values to jobs section if it skipped some.
-        config[key] = config.get(key, default_value)
+        config.setdefault(key, default_value)  # type: ignore
 
     return config
 

@@ -1,9 +1,9 @@
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 
 from resilient_logger.abstract_log_source import AbstractLogSource
 
 
-class AbstractLogTarget:
+class AbstractLogTarget(ABC):
     required: bool
 
     def __init__(self, required: bool = True):
@@ -18,4 +18,4 @@ class AbstractLogTarget:
 
     @abstractmethod
     def submit(self, entry: AbstractLogSource) -> bool:
-        return NotImplemented
+        raise NotImplementedError()

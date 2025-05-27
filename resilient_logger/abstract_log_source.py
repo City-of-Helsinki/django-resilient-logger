@@ -1,10 +1,10 @@
-from abc import abstractmethod
-from typing import Any, Generator, TypeVar
+from abc import ABC, abstractmethod
+from typing import Any, Iterator, Optional, TypeVar, Union
 
-TAbstractLogSource = TypeVar("AbstractLogSource")
+TAbstractLogSource = TypeVar("TAbstractLogSource", bound="AbstractLogSource")
 
 
-class AbstractLogSource:
+class AbstractLogSource(ABC):
     """
     Abstract base class (interface) that defines the method signatures.
     This is required because Django will not work if we import something
@@ -12,39 +12,37 @@ class AbstractLogSource:
     """
 
     @abstractmethod
-    def get_id(self) -> str | int:
-        return NotImplemented
+    def get_id(self) -> Union[str, int]:
+        raise NotImplementedError()
 
     @abstractmethod
-    def get_level(self) -> int | None:
-        return None
+    def get_level(self) -> Optional[int]:
+        raise NotImplementedError()
 
     @abstractmethod
     def get_message(self) -> Any:
-        return NotImplemented
+        raise NotImplementedError()
 
     @abstractmethod
     def get_context(self) -> Any:
-        return NotImplemented
+        raise NotImplementedError()
 
     @abstractmethod
     def is_sent(self) -> bool:
-        return NotImplemented
+        raise NotImplementedError()
 
     @abstractmethod
     def mark_sent(self) -> None:
-        return NotImplemented
+        raise NotImplementedError()
 
     @classmethod
     @abstractmethod
     def get_unsent_entries(
         cls: type[TAbstractLogSource], chunk_size: int
-    ) -> Generator[TAbstractLogSource, None, None]:
-        return NotImplemented
+    ) -> Iterator[TAbstractLogSource]:
+        raise NotImplementedError()
 
     @classmethod
     @abstractmethod
-    def clear_sent_entries(
-        cls: type[TAbstractLogSource], days_to_keep: int = 30
-    ) -> list[str]:
-        return NotImplemented
+    def clear_sent_entries(cls, days_to_keep: int = 30) -> list[str]:
+        raise NotImplementedError()

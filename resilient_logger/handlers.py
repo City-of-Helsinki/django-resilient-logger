@@ -1,4 +1,5 @@
 import logging
+from typing import Optional
 
 from resilient_logger.utils import assert_required_extras, get_log_record_extra
 
@@ -9,7 +10,9 @@ class ResilientLogHandler(logging.Handler):
     required_fields: list[str]
 
     def __init__(
-        self, level: int = logging.NOTSET, required_fields: list[str] | None = None
+        self,
+        level: int = logging.NOTSET,
+        required_fields: Optional[list[str]] = None,
     ):
         super().__init__(level)
         self.required_fields = required_fields or []

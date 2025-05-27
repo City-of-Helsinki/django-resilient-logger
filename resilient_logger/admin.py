@@ -2,7 +2,6 @@ import json
 import logging
 
 from django.contrib import admin
-from django.core.paginator import Paginator
 from django.utils.html import escape
 from django.utils.safestring import mark_safe
 

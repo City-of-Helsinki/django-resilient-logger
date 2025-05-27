@@ -1,11 +1,13 @@
 from datetime import timedelta
-from typing import Any, Generator
+from typing import Any, Iterator, Optional, TypeVar, Union
 
 from django.db import transaction
 from django.utils import timezone
 
-from resilient_logger.abstract_log_source import AbstractLogSource, TAbstractLogSource
+from resilient_logger.abstract_log_source import AbstractLogSource
 from resilient_logger.models import ResilientLogEntry
+
+TResilientLogSource = TypeVar("TResilientLogSource", bound="ResilientLogSource")
 
 
 class ResilientLogSource(AbstractLogSource):
@@ -15,10 +17,7 @@ class ResilientLogSource(AbstractLogSource):
         self.log = log
 
     @classmethod
-    @transaction.atomic
-    def create(
-        cls: TAbstractLogSource, level: int, message: Any, context: Any
-    ) -> TAbstractLogSource:
+    def create(cls, level: int, message: Any, context: Any):
         entry = ResilientLogEntry.objects.create(
             level=level,
             message=message,
@@ -27,10 +26,10 @@ class ResilientLogSource(AbstractLogSource):
 
         return cls(entry)
 
-    def get_id(self) -> str | int:
+    def get_id(self) -> Union[str, int]:
         return self.log.id
 
-    def get_level(self) -> int | None:
+    def get_level(self) -> Optional[int]:
         return self.log.level
 
     def get_message(self) -> Any:
@@ -48,13 +47,7 @@ class ResilientLogSource(AbstractLogSource):
 
     @classmethod
     @transaction.atomic
-    def get_unsent_entries(
-        cls: type[TAbstractLogSource], chunk_size: int
-    ) -> Generator[
-        TAbstractLogSource,
-        None,
-        None,
-    ]:
+    def get_unsent_entries(cls, chunk_size: int) -> Iterator["ResilientLogSource"]:
         entries = (
             ResilientLogEntry.objects.filter(is_sent=False)
             .order_by("created_at")
@@ -62,13 +55,11 @@ class ResilientLogSource(AbstractLogSource):
         )
 
         for entry in entries:
-            yield ResilientLogSource(entry)
+            yield cls(entry)
 
     @classmethod
     @transaction.atomic
-    def clear_sent_entries(
-        cls: type[TAbstractLogSource], days_to_keep: int = 30
-    ) -> list[str]:
+    def clear_sent_entries(cls, days_to_keep: int = 30) -> list[str]:
         entries = ResilientLogEntry.objects.filter(
             is_sent=True,
             created_at__lte=(timezone.now() - timedelta(days=days_to_keep)),
@@ -77,4 +68,4 @@ class ResilientLogSource(AbstractLogSource):
         deleted_ids = list(entries.values_list("id", flat=True))
         entries.delete()
 
-        return deleted_ids
+        return [str(deleted_id) for deleted_id in deleted_ids]
