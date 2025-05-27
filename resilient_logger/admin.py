@@ -25,10 +25,6 @@ class ResilientLogEntryAdmin(admin.ModelAdmin):
     list_display = ("id", "__str__", "created_at", "is_sent")
     list_filter = ("created_at", "is_sent")
 
-    # For increasing listing performance
-    show_full_result_count = False
-    paginator = Paginator
-
     def has_delete_permission(self, request, obj=None):
         return False
 
