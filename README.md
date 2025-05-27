@@ -1,7 +1,22 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
+
+- [Logger that ensures that logs sent out to external service.](#logger-that-ensures-that-logs-sent-out-to-external-service)
+  - [Adding django-resilient-logger to your Django project](#adding-django-resilient-logger-to-your-django-project)
+    - [Adding django-resilient-logger to Django apps](#adding-django-resilient-logger-to-django-apps)
+    - [Configuring django-resilient-logger](#configuring-django-resilient-logger)
+- [Development](#development)
+  - [Running tests](#running-tests)
+  - [Code format](#code-format)
+  - [Commit message format](#commit-message-format)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 # Logger that ensures that logs sent out to external service.
 
 `django-resilient-logger` is a logger module that stores logs in local DB and synchronizes those with external log target.
-If for some reason synchronization to external service does not work at the given time, it will retry it at later time. 
+If for some reason synchronization to external service does not work at the given time, it will retry it at later time.
 Management tasks require an external cron trigger.
 
 To manually trigger the scheduled tasks, one can run commands:
