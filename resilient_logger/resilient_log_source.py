@@ -17,7 +17,9 @@ class ResilientLogSource(AbstractLogSource):
         self.log = log
 
     @classmethod
-    def create(cls, level: int, message: Any, context: Any):
+    def create(
+        cls: type[TResilientLogSource], level: int, message: Any, context: Any
+    ) -> TResilientLogSource:
         entry = ResilientLogEntry.objects.create(
             level=level,
             message=message,

@@ -1,5 +1,5 @@
 import logging
-from typing import Generator, TypeVar
+from typing import Iterator, TypeVar, cast
 
 from resilient_logger.abstract_log_source import AbstractLogSource
 from resilient_logger.abstract_log_target import AbstractLogTarget
@@ -7,7 +7,7 @@ from resilient_logger.utils import dynamic_class, get_resilient_logger_config
 
 logger = logging.getLogger(__name__)
 
-TResilientLogger = TypeVar("ResilientLogger")
+TResilientLogger = TypeVar("TResilientLogger", bound="ResilientLogger")
 
 
 class ResilientLogger:
@@ -29,10 +29,10 @@ class ResilientLogger:
         self._log_targets = log_targets
 
     @classmethod
-    def create(cls: TResilientLogger) -> TResilientLogger:
+    def create(cls: type[TResilientLogger]) -> TResilientLogger:
         settings = get_resilient_logger_config()
-        batch_limit = settings.get("batch_limit")
-        chunk_size = settings.get("chunk_size")
+        batch_limit = settings.get("batch_limit", 5000)
+        chunk_size = settings.get("chunk_size", 500)
         sources = settings.get("sources", []).copy()
         targets = settings.get("targets", []).copy()
 
@@ -42,13 +42,17 @@ class ResilientLogger:
         for source in sources:
             source_args = source.copy()
             source_class_name = source_args.pop("class", None)
-            source_class = dynamic_class(AbstractLogSource, source_class_name)
+            source_class = dynamic_class(
+                cast(type[AbstractLogSource], AbstractLogSource), source_class_name
+            )
             list_sources.append(source_class)
 
         for target in targets:
             target_args = target.copy()
             target_class_name = target_args.pop("class", None)
-            target_class = dynamic_class(AbstractLogTarget, target_class_name)
+            target_class = dynamic_class(
+                cast(type[AbstractLogTarget], AbstractLogTarget), target_class_name
+            )
             list_targets.append(target_class(**target_args))
 
         return cls(
@@ -75,15 +79,16 @@ class ResilientLogger:
                 logger.info(f"Job limit of {self._batch_limit} logs reached.")
                 break
 
+            entry_id = str(entry.get_id())
             result = self.submit(entry)
-            results[entry.get_id()] = result
+            results[entry_id] = result
 
             if result:
                 entry.mark_sent()
 
         return results
 
-    def get_unsent_entries(self) -> Generator[AbstractLogSource, None, None]:
+    def get_unsent_entries(self) -> Iterator[AbstractLogSource]:
         for log_source in self._log_sources:
             for entry in log_source.get_unsent_entries(self._chunk_size):
                 yield entry
