@@ -40,9 +40,16 @@ class AbstractLogSource(ABC):
     def get_unsent_entries(
         cls: type[TAbstractLogSource], chunk_size: int
     ) -> Iterator[TAbstractLogSource]:
+        """
+        Queries and returns iterator for unsent log entries.
+        """
         raise NotImplementedError()
 
     @classmethod
     @abstractmethod
     def clear_sent_entries(cls, days_to_keep: int = 30) -> list[str]:
+        """
+        Clears the old entries that are older than days_to_keep days
+        and returns the list of the cleared object ids.
+        """
         raise NotImplementedError()

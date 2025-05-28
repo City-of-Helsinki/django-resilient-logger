@@ -89,11 +89,18 @@ class ResilientLogger:
         return results
 
     def get_unsent_entries(self) -> Iterator[AbstractLogSource]:
+        """
+        Queries and returns iterator for all unsent log entries.
+        """
         for log_source in self._log_sources:
             for entry in log_source.get_unsent_entries(self._chunk_size):
                 yield entry
 
     def clear_sent_entries(self, days_to_keep: int = 30) -> list[str]:
+        """
+        Clears all the old entries that are older than days_to_keep days
+        and returns the list of the cleared object ids.
+        """
         deleted_ids: list[str] = []
 
         for log_source in self._log_sources:
