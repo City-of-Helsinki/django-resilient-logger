@@ -64,7 +64,12 @@ class ResilientLogger:
 
     def submit(self, source: AbstractLogSource) -> bool:
         for log_target in self._log_targets:
-            submitted = log_target.submit(source)
+            submitted = False
+
+            try:
+                submitted = log_target.submit(source)
+            except Exception:
+                logger.error("Log target threw while submitting", exc_info=True)
 
             if not submitted and log_target.is_required():
                 return False

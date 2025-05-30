@@ -70,7 +70,6 @@ class DjangoAuditLogSource(AbstractLogSource):
                     | Q(additional_data__is_sent=False)
                 ),
             )
-            .select_for_update(of=("self",))
             .order_by("timestamp")
             .iterator(chunk_size=chunk_size)
         )
@@ -84,7 +83,7 @@ class DjangoAuditLogSource(AbstractLogSource):
             ~Q(additional_data__has_key="is_sent")  # support old entries
             | Q(additional_data__is_sent=True),
             timestamp__lte=(timezone.now() - timedelta(days=days_to_keep)),
-        ).select_for_update()
+        )
 
         deleted_ids = list(entries.values_list("object_pk", flat=True))
         entries.delete()
