@@ -34,7 +34,6 @@ license = "MIT"
 license-files = ["LICENSE"]
 dependencies = ["django>=4.2", "elasticsearch>=8.0.0,<9.0.0"]
 
-
 [project.optional-dependencies]
 test = [
     "pytest",
@@ -45,6 +44,8 @@ test = [
     "pytest-rerunfailures",
     "pytest-xdist[psutil]",
 ]
+auditlog = ["django-auditlog"]
+all = ["django-resilient-logger[auditlog]", "django-resilient-logger[test]"]
 
 [project.urls]
 Homepage = "https://github.com/City-of-Helsinki/django-resilient-logger"
@@ -60,7 +61,7 @@ path = "resilient_logger/__init__.py"
 dependencies = [
     "pre-commit",
 ]
-features = ["test"]
+features = ["all"]
 python = "3.9"
 type = "virtual"
 path = ".venv"
@@ -75,7 +76,7 @@ manage = "tests/manage.py {args}"
 
 [tool.hatch.envs.hatch-test]
 default-args = ["tests"]
-features = ["test"]
+features = ["all"]
 matrix-name-format = "dj{value}"
 parallel = false
 randomize = true
