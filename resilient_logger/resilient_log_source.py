@@ -1,6 +1,7 @@
 from datetime import timedelta
 from typing import Any, Iterator, Optional, TypeVar, Union
 
+from django.db import transaction
 from django.utils import timezone
 
 from resilient_logger.abstract_log_source import AbstractLogSource
@@ -47,6 +48,7 @@ class ResilientLogSource(AbstractLogSource):
         self.log.save(update_fields=["is_sent"])
 
     @classmethod
+    @transaction.atomic
     def get_unsent_entries(cls, chunk_size: int) -> Iterator["ResilientLogSource"]:
         entries = (
             ResilientLogEntry.objects.filter(is_sent=False)
@@ -58,11 +60,12 @@ class ResilientLogSource(AbstractLogSource):
             yield cls(entry)
 
     @classmethod
+    @transaction.atomic
     def clear_sent_entries(cls, days_to_keep: int = 30) -> list[str]:
         entries = ResilientLogEntry.objects.filter(
             is_sent=True,
             created_at__lte=(timezone.now() - timedelta(days=days_to_keep)),
-        )
+        ).select_for_update()
 
         deleted_ids = list(entries.values_list("id", flat=True))
         entries.delete()
