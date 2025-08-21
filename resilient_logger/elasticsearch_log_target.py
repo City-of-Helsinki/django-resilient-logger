@@ -98,5 +98,11 @@ class ElasticsearchLogTarget(AbstractLogTarget):
             )
 
             return True
+        except Exception:
+            """
+            Unknown exception, log it and keep going to avoid transaction rollbacks.
+            """
+            logger.exception(f"Entry with key {hash} failed.")
+
 
         return False
