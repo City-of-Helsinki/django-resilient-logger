@@ -55,14 +55,13 @@ Configuration must contain required `origin`, `environment`, `sources` and `targ
 RESILIENT_LOGGER = {
     "origin": "NameOfTheApplication",
     "environment": "dev",
-    "sources": [{
-        "class": "resilient_logger.resilient_log_source.ResilientLogSource",
-    }],
+    "sources": [
+        { "class": "resilient_logger.resilient_log_source.ResilientLogSource" },
+        { "class": "resilient_logger.django_audit_log_source.DjangoAuditLogSource" },
+    ],
     "targets": [{
         "class": "resilient_logger.elasticsearch_log_target.ElasticsearchLogTarget",
-        "es_host": "ELASTICSEARCH_HOST",
-        "es_port": "ELASTICSEARCH_PORT",
-        "es_scheme": "ELASTICSEARCH_SCHEME",
+        "es_url": "https://ELASTICSEARCH_HOST:443",
         "es_username": "ELASTICSEARCH_USERNAME",
         "es_password": "ELASTICSEARCH_PASSWORD",
         "es_index": "ELASTICSEARCH_INDEX",

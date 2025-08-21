@@ -1,4 +1,6 @@
 import logging
+from typing import Optional
+from urllib.parse import urlparse
 
 from elasticsearch import ConflictError, Elasticsearch
 
@@ -15,6 +17,19 @@ logger = logging.getLogger(__name__)
 class ElasticsearchLogTarget(AbstractLogTarget):
     """
     Log target that sends entries to Elasticsearch.
+
+    The constructor requires connection details, including `es_username`, `es_password`,
+    and `es_index`.
+
+    You can specify the connection using either a full `es_url` or separate fields:
+    `es_host`, `es_port`, and `es_scheme`.
+
+    If `es_url` is provided but lacks a scheme or port, the values from `es_scheme` and
+    `es_port` will be used.
+
+    Defaults:
+    - `es_scheme`: https
+    - `es_port`: 9200
     """
 
     _client: Elasticsearch
@@ -22,19 +37,34 @@ class ElasticsearchLogTarget(AbstractLogTarget):
 
     def __init__(
         self,
-        es_host: str,
-        es_port: int,
-        es_scheme: str,
+        *,
         es_username: str,
         es_password: str,
         es_index: str,
+        es_url: Optional[str] = None,
+        es_host: Optional[str] = None,
+        es_port: Optional[int] = 9200,
+        es_scheme: Optional[str] = "https",
         required: bool = True,
     ) -> None:
         super().__init__(required)
 
+        if not es_url:
+            scheme = es_scheme
+            host = es_host
+            port = es_port
+        else:
+            if "://" not in es_url:
+                es_url = f"{es_scheme}://{es_url}"
+
+            parsed = urlparse(es_url)
+            scheme: Optional[str] = parsed.scheme
+            host: Optional[str] = parsed.hostname
+            port: Optional[int] = parsed.port or es_port
+
         self._index = es_index
         self._client = Elasticsearch(
-            [{"host": es_host, "port": es_port, "scheme": es_scheme}],
+            [{"host": host, "port": port, "scheme": scheme}],
             basic_auth=(es_username, es_password),
         )
 
@@ -68,5 +98,11 @@ class ElasticsearchLogTarget(AbstractLogTarget):
             )
 
             return True
+        except Exception:
+            """
+            Unknown exception, log it and keep going to avoid transaction rollbacks.
+            """
+            logger.exception(f"Entry with key {hash} failed.")
+
 
         return False
