@@ -4,6 +4,7 @@ from typing import Iterator, TypeVar, cast
 from resilient_logger.abstract_log_source import AbstractLogSource
 from resilient_logger.abstract_log_target import AbstractLogTarget
 from resilient_logger.utils import dynamic_class, get_resilient_logger_config
+from django.db import transaction
 
 logger = logging.getLogger(__name__)
 
@@ -62,30 +63,17 @@ class ResilientLogger:
             log_targets=list_targets,
         )
 
-    def submit(self, source: AbstractLogSource) -> bool:
-        for log_target in self._log_targets:
-            submitted = False
-
-            try:
-                submitted = log_target.submit(source)
-            except Exception:
-                logger.error("Log target threw while submitting", exc_info=True)
-
-            if not submitted and log_target.is_required():
-                return False
-
-        return True
-
+    @transaction.atomic
     def submit_unsent_entries(self) -> dict[str, bool]:
         results: dict[str, bool] = {}
 
-        for count, entry in enumerate(self.get_unsent_entries()):
+        for count, entry in enumerate(self._get_unsent_entries()):
             if count >= self._batch_limit:
                 logger.info(f"Job limit of {self._batch_limit} logs reached.")
                 break
 
             entry_id = str(entry.get_id())
-            result = self.submit(entry)
+            result = self._submit(entry)
             results[entry_id] = result
 
             if result:
@@ -93,14 +81,9 @@ class ResilientLogger:
 
         return results
 
-    def get_unsent_entries(self) -> Iterator[AbstractLogSource]:
-        """
-        Queries and returns iterator for all unsent log entries.
-        """
-        for log_source in self._log_sources:
-            for entry in log_source.get_unsent_entries(self._chunk_size):
-                yield entry
 
+
+    @transaction.atomic
     def clear_sent_entries(self, days_to_keep: int = 30) -> list[str]:
         """
         Clears all the old entries that are older than days_to_keep days
@@ -112,3 +95,25 @@ class ResilientLogger:
             deleted_ids += log_source.clear_sent_entries(days_to_keep)
 
         return deleted_ids
+    
+    def _submit(self, source: AbstractLogSource) -> bool:
+        for log_target in self._log_targets:
+            submitted = False
+
+            try:
+                submitted = log_target.submit(source)
+            except Exception:
+                logger.exception("Log target threw while submitting")
+
+            if not submitted and log_target.is_required():
+                return False
+
+        return True
+
+    def _get_unsent_entries(self) -> Iterator[AbstractLogSource]:
+        """
+        Queries and returns iterator for all unsent log entries.
+        """
+        for log_source in self._log_sources:
+            for entry in log_source.get_unsent_entries(self._chunk_size):
+                yield entry
