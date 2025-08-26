@@ -1,7 +1,7 @@
 import logging
 
-from resilient_logger.abstract_log_source import AbstractLogSource
-from resilient_logger.abstract_log_target import AbstractLogTarget
+from resilient_logger.sources import AbstractLogSource
+from resilient_logger.targets import AbstractLogTarget
 from resilient_logger.utils import create_target_document
 
 

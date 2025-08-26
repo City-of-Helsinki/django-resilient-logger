@@ -4,8 +4,8 @@ from contextlib import nullcontext as does_not_raise
 import pytest
 from django.test import override_settings
 
+from resilient_logger.errors import MissingContextError
 from resilient_logger.handlers import ResilientLogHandler
-from resilient_logger.missing_context_error import MissingContextError
 from tests.testdata.testconfig import (
     VALID_CONFIG_ALL_FIELDS,
 )

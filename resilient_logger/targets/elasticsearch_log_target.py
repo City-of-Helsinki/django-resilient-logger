@@ -4,8 +4,8 @@ from urllib.parse import urlparse
 
 from elasticsearch import ConflictError, Elasticsearch
 
-from resilient_logger.abstract_log_source import AbstractLogSource
-from resilient_logger.abstract_log_target import AbstractLogTarget
+from resilient_logger.sources import AbstractLogSource
+from resilient_logger.targets import AbstractLogTarget
 from resilient_logger.utils import content_hash, create_target_document
 
 # Constants
@@ -103,6 +103,5 @@ class ElasticsearchLogTarget(AbstractLogTarget):
             Unknown exception, log it and keep going to avoid transaction rollbacks.
             """
             logger.exception(f"Entry with key {hash} failed.")
-
 
         return False

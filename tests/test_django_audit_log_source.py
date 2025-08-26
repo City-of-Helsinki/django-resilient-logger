@@ -2,7 +2,7 @@ import pytest
 from auditlog.models import LogEntry
 from django.test import override_settings
 
-from resilient_logger.django_audit_log_source import DjangoAuditLogSource
+from resilient_logger.sources import DjangoAuditLogSource
 from tests.models import DummyModel
 from tests.testdata.testconfig import VALID_CONFIG_ALL_FIELDS
 

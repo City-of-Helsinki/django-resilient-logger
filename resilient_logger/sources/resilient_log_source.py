@@ -4,8 +4,8 @@ from typing import Any, Iterator, Optional, TypeVar, Union
 from django.db import transaction
 from django.utils import timezone
 
-from resilient_logger.abstract_log_source import AbstractLogSource
 from resilient_logger.models import ResilientLogEntry
+from resilient_logger.sources import AbstractLogSource
 
 TResilientLogSource = TypeVar("TResilientLogSource", bound="ResilientLogSource")
 

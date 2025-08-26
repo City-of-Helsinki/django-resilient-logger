@@ -7,7 +7,7 @@ from django.db import transaction
 from django.db.models import Q
 from django.utils import timezone
 
-from resilient_logger.abstract_log_source import AbstractLogSource
+from resilient_logger.sources import AbstractLogSource
 from resilient_logger.utils import get_resilient_logger_config
 
 

@@ -24,7 +24,7 @@ class ResilientLogHandler(logging.Handler):
 
         To work around this, import it here when the logger is used first time.
         """
-        from resilient_logger.resilient_log_source import ResilientLogSource
+        from resilient_logger.sources import ResilientLogSource
 
         extra = get_log_record_extra(record)
         assert_required_extras(extra, self.required_fields)

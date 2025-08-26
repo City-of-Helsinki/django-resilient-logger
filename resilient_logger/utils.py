@@ -8,8 +8,8 @@ from typing import Any, Optional, TypedDict, TypeVar
 from django.conf import settings
 from django.core.serializers.json import DjangoJSONEncoder
 
-from resilient_logger.abstract_log_source import AbstractLogSource
-from resilient_logger.missing_context_error import MissingContextError
+from resilient_logger.errors.missing_context_error import MissingContextError
+from resilient_logger.sources import AbstractLogSource
 
 
 class ResilientLoggerConfig(TypedDict):
