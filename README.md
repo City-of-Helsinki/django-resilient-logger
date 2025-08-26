@@ -47,8 +47,10 @@ To configure resilient logger, you must provide config section in your settings.
 Configuration must contain required `origin`, `environment`, `sources` and `targets` keys. It also accepts optional keys `batch_limit`, `chunk_size`, `clear_sent_entries` and `submit_unsent_entries`.
 - `origin` is the name of the application or unique identifier of it.
 - `environment` is the name of the environment where the application is running.
-- `sources` expects array of objects with property `class` (full class path) being present. Other properties are ignored.
-- `targets` expects array of objects with `class` (full class path) and being present. Others are passed as constructor parameters.
+- `sources` expects array of objects with property `class` (full class path) being present.
+  - If source is instance of `AbstractLogSourceFactory`, other properties are passed to factory create method. Otherwise other properties are simply ignored.
+- `targets` expects array of objects with property `class` (full class path) being present.
+  - Other properties are passed as constructor parameters.
 
 
 ```python
@@ -91,6 +93,7 @@ LOGGING = {
             ...
         },
     ...
+    }
 }
 ```
 

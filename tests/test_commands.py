@@ -5,6 +5,7 @@ from django.core.management import call_command
 from django.test import override_settings
 
 from resilient_logger.sources import ResilientLogSource
+from resilient_logger.utils import get_resilient_logger_config
 from tests.testdata.testconfig import VALID_CONFIG_ALL_FIELDS
 
 logger = logging.getLogger(__name__)
@@ -21,6 +22,11 @@ def create_resilient_log_entries(count: int, mark_sent: bool):
 
         if mark_sent:
             entry.mark_sent()
+
+
+@pytest.fixture(autouse=True)
+def setup():
+    get_resilient_logger_config.cache_clear()
 
 
 @pytest.mark.django_db
