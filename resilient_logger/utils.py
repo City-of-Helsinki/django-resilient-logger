@@ -7,6 +7,7 @@ from typing import Any, Optional, TypedDict, TypeVar
 
 from django.conf import settings
 from django.core.serializers.json import DjangoJSONEncoder
+from django.db import models
 
 from resilient_logger.errors import MissingContextError
 from resilient_logger.sources import AbstractLogSource
@@ -118,6 +119,39 @@ def get_resilient_logger_config() -> ResilientLoggerConfig:
         config.setdefault(key, default_value)  # type: ignore
 
     return config
+
+
+def get_resilient_logger_source_config(class_name: str) -> dict:
+    config = get_resilient_logger_config()
+
+    for source in config["sources"]:
+        source_class = source.get("class", None)
+
+        if class_name_matches(class_name, source_class):
+            return source
+
+    raise RuntimeError(f"Unable to find source definition for class {class_name}")
+
+
+def class_name_matches(actual_name: str, expected_name: str) -> bool:
+    """
+    Checks if the class name matches to absolute path
+    or path without the filename attached.
+
+    E.g. following values will be considered the same:
+     - resilient_logger.sources.custom_audit_log_source.CustomAuditLogSource
+     - resilient_logger.sources.CustomAuditLogSource
+    """
+    if actual_name == expected_name:
+        return True
+
+    actual_parts = actual_name.split(".")
+    path_without_filename = ".".join(actual_parts[:-2] + [actual_parts[-1]])
+    return path_without_filename == expected_name
+
+
+def parse_class_path(model_class: type[models.Model]) -> str:
+    return f"{model_class.__module__}.{model_class.__qualname__}"
 
 
 def content_hash(contents: dict[str, Any]) -> str:

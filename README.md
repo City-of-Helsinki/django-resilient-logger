@@ -48,7 +48,7 @@ Configuration must contain required `origin`, `environment`, `sources` and `targ
 - `origin` is the name of the application or unique identifier of it.
 - `environment` is the name of the environment where the application is running.
 - `sources` expects array of objects with property `class` (full class path) being present.
-  - If source is instance of `AbstractLogSourceFactory`, other properties are passed to factory create method. Otherwise other properties are simply ignored.
+  - Other properties can be read from configuration via helpers.
 - `targets` expects array of objects with property `class` (full class path) being present.
   - Other properties are passed as constructor parameters.
 

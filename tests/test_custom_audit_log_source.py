@@ -1,28 +1,27 @@
+import logging
 from datetime import datetime
 
 import pytest
 from django.test import override_settings
 
-from resilient_logger.models import (
-    ResilientLogEntry,
-    create_custom_audit_log_entry_model,
+from resilient_logger.models.custom_audit_log_entry import (
+    CustomAuditLogEntryModel,
 )
-from resilient_logger.sources import AbstractLogSource, CustomAuditLogSourceFactory
+from resilient_logger.models.resilient_log_entry import (
+    ResilientLogEntry,
+)
+from resilient_logger.sources import CustomAuditLogSource
 from resilient_logger.utils import get_resilient_logger_config
-from tests.testdata.testconfig import VALID_CONFIG_ALL_FIELDS
+from tests.testdata.testconfig import VALID_CONFIG_ALL_FIELDS_WITH_TABLE_NAME
 
 table_name = ResilientLogEntry._meta.db_table
-CustomLogEntry = create_custom_audit_log_entry_model(table_name)
-CustomLogSource = CustomAuditLogSourceFactory.create(
-    table_name=table_name, date_time_field="message.date_time"
-)
-
 fake_date_time = datetime(2025, 1, 1, 0, 0, 0)
 
 
 @pytest.fixture(autouse=True)
 def setup():
     get_resilient_logger_config.cache_clear()
+    CustomAuditLogEntryModel.init_model.cache_clear()
 
 
 def create_objects(count: int) -> list[ResilientLogEntry]:
@@ -38,12 +37,13 @@ def create_objects(count: int) -> list[ResilientLogEntry]:
     return results
 
 
-def object_to_auditlog_source(model: ResilientLogEntry) -> AbstractLogSource:
-    entry = CustomLogEntry.objects.get(id=model.id)
-    return CustomLogSource(entry)
+def object_to_auditlog_source(model: ResilientLogEntry) -> CustomAuditLogSource:
+    entry = CustomAuditLogEntryModel.objects.get(id=model.id)
+    return CustomAuditLogSource(entry)
 
 
 @pytest.mark.django_db
+@override_settings(RESILIENT_LOGGER=VALID_CONFIG_ALL_FIELDS_WITH_TABLE_NAME)
 def test_mark_sent():
     [object] = create_objects(1)
 
@@ -58,19 +58,19 @@ def test_mark_sent():
 
 
 @pytest.mark.django_db
-@override_settings(RESILIENT_LOGGER=VALID_CONFIG_ALL_FIELDS)
+@override_settings(RESILIENT_LOGGER=VALID_CONFIG_ALL_FIELDS_WITH_TABLE_NAME)
 def test_get_unsent_entries():
     num_objects = 3
     objects = create_objects(num_objects)
 
-    all_log_entries = CustomLogEntry.objects.filter()
+    all_log_entries = CustomAuditLogEntryModel.objects.filter()
     assert len(all_log_entries) == num_objects
 
     for log_entry in all_log_entries:
         assert not log_entry.is_sent
 
     actual_entries = [object_to_auditlog_source(obj) for obj in objects]
-    unsent_entries = list(CustomLogSource.get_unsent_entries(500))
+    unsent_entries = list(CustomAuditLogSource.get_unsent_entries(500))
 
     assert len(actual_entries) == len(unsent_entries)
 
@@ -79,7 +79,7 @@ def test_get_unsent_entries():
         assert actual_entries[i].get_message() == unsent_entries[i].get_message()
         actual_entries[i].mark_sent()
 
-    unsent_entries = list(CustomLogSource.get_unsent_entries(500))
+    unsent_entries = list(CustomAuditLogSource.get_unsent_entries(500))
     assert len(unsent_entries) == 0
 
     for log_entry in all_log_entries:
@@ -88,8 +88,11 @@ def test_get_unsent_entries():
 
 
 @pytest.mark.django_db
-@override_settings(RESILIENT_LOGGER=VALID_CONFIG_ALL_FIELDS)
+@override_settings(RESILIENT_LOGGER=VALID_CONFIG_ALL_FIELDS_WITH_TABLE_NAME)
 def test_clear_sent_entries():
+    logger = logging.getLogger(__name__)
+    logger.error(ResilientLogEntry._meta.db_table)
+
     num_objects = 3
     objects = create_objects(num_objects)
     actual_entries = [object_to_auditlog_source(obj) for obj in objects]
@@ -98,7 +101,7 @@ def test_clear_sent_entries():
         actual_entry.mark_sent()
 
     actual_ids = [str(entry.get_id()) for entry in actual_entries]
-    cleaned_ids = CustomLogSource.clear_sent_entries(0)
+    cleaned_ids = CustomAuditLogSource.clear_sent_entries(0)
 
     assert len(actual_ids) == num_objects
     assert len(cleaned_ids) == num_objects
@@ -106,5 +109,5 @@ def test_clear_sent_entries():
     for cleaned_id in cleaned_ids:
         assert cleaned_id in actual_ids
 
-    cleaned_ids = CustomLogSource.clear_sent_entries(0)
+    cleaned_ids = CustomAuditLogSource.clear_sent_entries(0)
     assert len(cleaned_ids) == 0

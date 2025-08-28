@@ -30,3 +30,5 @@ TEMPLATES = [
         },
     },
 ]
+
+RESILIENT_LOGGER = {}

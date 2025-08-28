@@ -4,9 +4,6 @@ from typing import Iterator, TypeVar, cast
 from django.db import transaction
 
 from resilient_logger.sources import AbstractLogSource
-from resilient_logger.sources.abstract_log_source_factory import (
-    AbstractLogSourceFactory,
-)
 from resilient_logger.targets import AbstractLogTarget
 from resilient_logger.utils import dynamic_class, get_resilient_logger_config
 
@@ -49,15 +46,9 @@ class ResilientLogger:
             source_class_name = source_args.pop("class", None)
 
             source_class = dynamic_class(
-                cast(
-                    (type[AbstractLogSource | AbstractLogSourceFactory]),
-                    (AbstractLogSource | AbstractLogSourceFactory),
-                ),
+                cast(type[AbstractLogSource], AbstractLogSource),
                 source_class_name,
             )
-
-            if issubclass(source_class, AbstractLogSourceFactory):
-                source_class = source_class.create(**source_args)
 
             list_sources.append(source_class)
 
