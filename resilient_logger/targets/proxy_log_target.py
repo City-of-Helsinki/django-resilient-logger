@@ -10,8 +10,6 @@ class ProxyLogTarget(AbstractLogTarget):
     Logger target that sends the resilient log entries to another logger.
     """
 
-    _logger: logging.Logger
-
     def __init__(self, name: str = __name__) -> None:
         self._logger = logging.getLogger(name)
 

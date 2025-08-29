@@ -1,7 +1,5 @@
 class MissingContextError(Exception):
-    missing_fields: list[str]
-
-    def __init__(self, missing_fields):
+    def __init__(self, missing_fields: list[str]):
         self.missing_fields = missing_fields
 
     def __str__(self):

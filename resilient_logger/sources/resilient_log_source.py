@@ -11,8 +11,6 @@ TResilientLogSource = TypeVar("TResilientLogSource", bound="ResilientLogSource")
 
 
 class ResilientLogSource(AbstractLogSource):
-    log: ResilientLogEntry
-
     def __init__(self, log: ResilientLogEntry):
         self.log = log
 

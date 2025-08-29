@@ -12,8 +12,6 @@ from resilient_logger.utils import get_resilient_logger_config
 
 
 class DjangoAuditLogSource(AbstractLogSource):
-    log: LogEntry
-
     def __init__(self, log: LogEntry):
         self.log = log
 
