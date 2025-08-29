@@ -3,13 +3,13 @@ from datetime import datetime
 
 import pytest
 
-from resilient_logger.models.custom_audit_log_entry import (
-    CustomAuditLogEntry,
+from resilient_logger.models.external_audit_log_entry import (
+    ExternalAuditLogEntry,
 )
 from resilient_logger.models.resilient_log_entry import (
     ResilientLogEntry,
 )
-from resilient_logger.sources import CustomAuditLogSource
+from resilient_logger.sources import ExternalAuditLogSource
 from resilient_logger.utils import get_resilient_logger_config
 
 table_name = ResilientLogEntry._meta.db_table
@@ -34,9 +34,9 @@ def create_objects(count: int) -> list[ResilientLogEntry]:
     return results
 
 
-def object_to_auditlog_source(model: ResilientLogEntry) -> CustomAuditLogSource:
-    entry = CustomAuditLogEntry.objects.get(id=model.id)
-    return CustomAuditLogSource(entry)
+def object_to_auditlog_source(model: ResilientLogEntry) -> ExternalAuditLogSource:
+    entry = ExternalAuditLogEntry.objects.get(id=model.id)
+    return ExternalAuditLogSource(entry)
 
 
 @pytest.mark.django_db
@@ -58,14 +58,14 @@ def test_get_unsent_entries():
     num_objects = 3
     objects = create_objects(num_objects)
 
-    all_log_entries = CustomAuditLogEntry.objects.filter()
+    all_log_entries = ExternalAuditLogEntry.objects.filter()
     assert len(all_log_entries) == num_objects
 
     for log_entry in all_log_entries:
         assert not log_entry.is_sent
 
     actual_entries = [object_to_auditlog_source(obj) for obj in objects]
-    unsent_entries = list(CustomAuditLogSource.get_unsent_entries(500))
+    unsent_entries = list(ExternalAuditLogSource.get_unsent_entries(500))
 
     assert len(actual_entries) == len(unsent_entries)
 
@@ -74,7 +74,7 @@ def test_get_unsent_entries():
         assert actual_entries[i].get_message() == unsent_entries[i].get_message()
         actual_entries[i].mark_sent()
 
-    unsent_entries = list(CustomAuditLogSource.get_unsent_entries(500))
+    unsent_entries = list(ExternalAuditLogSource.get_unsent_entries(500))
     assert len(unsent_entries) == 0
 
     for log_entry in all_log_entries:
@@ -95,7 +95,7 @@ def test_clear_sent_entries():
         actual_entry.mark_sent()
 
     actual_ids = [str(entry.get_id()) for entry in actual_entries]
-    cleaned_ids = CustomAuditLogSource.clear_sent_entries(0)
+    cleaned_ids = ExternalAuditLogSource.clear_sent_entries(0)
 
     assert len(actual_ids) == num_objects
     assert len(cleaned_ids) == num_objects
@@ -103,5 +103,5 @@ def test_clear_sent_entries():
     for cleaned_id in cleaned_ids:
         assert cleaned_id in actual_ids
 
-    cleaned_ids = CustomAuditLogSource.clear_sent_entries(0)
+    cleaned_ids = ExternalAuditLogSource.clear_sent_entries(0)
     assert len(cleaned_ids) == 0

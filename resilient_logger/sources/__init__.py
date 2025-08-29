@@ -1,4 +1,4 @@
 from .abstract_log_source import AbstractLogSource as AbstractLogSource
-from .custom_audit_log_source import CustomAuditLogSource as CustomAuditLogSource
 from .django_audit_log_source import DjangoAuditLogSource as DjangoAuditLogSource
+from .external_audit_log_source import ExternalAuditLogSource as ExternalAuditLogSource
 from .resilient_log_source import ResilientLogSource as ResilientLogSource

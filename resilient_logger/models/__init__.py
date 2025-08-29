@@ -1,2 +1,2 @@
-from .custom_audit_log_entry import CustomAuditLogEntry as CustomAuditLogEntry
+from .external_audit_log_entry import ExternalAuditLogEntry as ExternalAuditLogEntry
 from .resilient_log_entry import ResilientLogEntry as ResilientLogEntry

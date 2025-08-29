@@ -61,7 +61,7 @@ RESILIENT_LOGGER = {
         { "class": "resilient_logger.sources.ResilientLogSource" },
         { "class": "resilient_logger.sources.DjangoAuditLogSource" },
         {
-            "class": "resilient_logger.sources.CustomAuditLogSource",
+            "class": "resilient_logger.sources.ExternalAuditLogSource",
             "table_name": "db_table_name_for_audit_logs",
             "date_time_field", "column_name.or.column_name.path.to.field"
         },

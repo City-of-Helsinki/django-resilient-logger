@@ -138,8 +138,8 @@ def class_name_matches(actual_name: str, expected_name: str) -> bool:
     or path without the filename attached.
 
     E.g. following values will be considered the same:
-     - resilient_logger.sources.custom_audit_log_source.CustomAuditLogSource
-     - resilient_logger.sources.CustomAuditLogSource
+     - resilient_logger.sources.external_audit_log_source.ExternalAuditLogSource
+     - resilient_logger.sources.ExternalAuditLogSource
     """
     if actual_name == expected_name:
         return True

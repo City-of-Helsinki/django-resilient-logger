@@ -8,7 +8,7 @@ from resilient_logger.utils import get_resilient_logger_source_config
 
 @cache
 def parse_table_name() -> str:
-    class_name = "resilient_logger.sources.CustomAuditLogSource"
+    class_name = "resilient_logger.sources.ExternalAuditLogSource"
     table_name = "table_name_missing"
 
     try:
@@ -20,7 +20,7 @@ def parse_table_name() -> str:
     return table_name
 
 
-class CustomAuditLogEntry(models.Model):
+class ExternalAuditLogEntry(models.Model):
     id = models.BigAutoField(primary_key=True)
     is_sent = models.BooleanField(default=False, verbose_name=_("is sent"))
     message = models.JSONField(verbose_name=_("message"))
@@ -29,8 +29,8 @@ class CustomAuditLogEntry(models.Model):
     class Meta:
         managed = False
         db_table = parse_table_name()
-        verbose_name = _("custom audit log entry")
-        verbose_name_plural = _("custom audit log entries")
+        verbose_name = _("external audit log entry")
+        verbose_name_plural = _("external audit log entries")
 
     def save(self, *args, **kwargs):
         if self._state.adding:

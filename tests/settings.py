@@ -37,7 +37,7 @@ RESILIENT_LOGGER = {
             "class": "resilient_logger.sources.ResilientLogSource",
         },
         {
-            "class": "resilient_logger.sources.CustomAuditLogSource",
+            "class": "resilient_logger.sources.ExternalAuditLogSource",
             "table_name": "resilient_logger_resilientlogentry",
             "date_time_field": "message.date_time",
         },
