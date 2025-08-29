@@ -4,7 +4,7 @@ from datetime import datetime
 import pytest
 
 from resilient_logger.models.custom_audit_log_entry import (
-    CustomAuditLogEntryModel,
+    CustomAuditLogEntry,
 )
 from resilient_logger.models.resilient_log_entry import (
     ResilientLogEntry,
@@ -35,7 +35,7 @@ def create_objects(count: int) -> list[ResilientLogEntry]:
 
 
 def object_to_auditlog_source(model: ResilientLogEntry) -> CustomAuditLogSource:
-    entry = CustomAuditLogEntryModel.objects.get(id=model.id)
+    entry = CustomAuditLogEntry.objects.get(id=model.id)
     return CustomAuditLogSource(entry)
 
 
@@ -58,7 +58,7 @@ def test_get_unsent_entries():
     num_objects = 3
     objects = create_objects(num_objects)
 
-    all_log_entries = CustomAuditLogEntryModel.objects.filter()
+    all_log_entries = CustomAuditLogEntry.objects.filter()
     assert len(all_log_entries) == num_objects
 
     for log_entry in all_log_entries:

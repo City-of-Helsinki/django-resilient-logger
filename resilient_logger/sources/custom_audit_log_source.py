@@ -5,7 +5,7 @@ from typing import Any, Iterator, Optional, Union
 from django.db import transaction
 from django.utils import timezone
 
-from resilient_logger.models.custom_audit_log_entry import CustomAuditLogEntryModel
+from resilient_logger.models.custom_audit_log_entry import CustomAuditLogEntry
 from resilient_logger.sources.abstract_log_source import AbstractLogSource
 from resilient_logger.utils import get_resilient_logger_source_config, parse_class_path
 
@@ -13,7 +13,7 @@ from resilient_logger.utils import get_resilient_logger_source_config, parse_cla
 class CustomAuditLogSource(AbstractLogSource):
     date_path_parts: list[str]
 
-    def __init__(self, log: CustomAuditLogEntryModel):
+    def __init__(self, log: CustomAuditLogEntry):
         self._initialize()
         self.log = log
 
@@ -76,7 +76,7 @@ class CustomAuditLogSource(AbstractLogSource):
     @transaction.atomic
     def get_unsent_entries(cls, chunk_size: int) -> Iterator["CustomAuditLogSource"]:
         entries = (
-            CustomAuditLogEntryModel.objects.filter(is_sent=False)
+            CustomAuditLogEntry.objects.filter(is_sent=False)
             .order_by("created_at")
             .iterator(chunk_size=chunk_size)
         )
@@ -87,7 +87,7 @@ class CustomAuditLogSource(AbstractLogSource):
     @classmethod
     @transaction.atomic
     def clear_sent_entries(cls, days_to_keep: int = 30) -> list[str]:
-        entries = CustomAuditLogEntryModel.objects.filter(
+        entries = CustomAuditLogEntry.objects.filter(
             is_sent=True,
             created_at__lte=(timezone.now() - timedelta(days=days_to_keep)),
         ).select_for_update()

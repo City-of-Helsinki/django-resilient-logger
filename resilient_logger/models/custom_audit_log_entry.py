@@ -20,7 +20,7 @@ def parse_table_name() -> str:
     return table_name
 
 
-class CustomAuditLogEntryModel(models.Model):
+class CustomAuditLogEntry(models.Model):
     id = models.BigAutoField(primary_key=True)
     is_sent = models.BooleanField(default=False, verbose_name=_("is sent"))
     message = models.JSONField(verbose_name=_("message"))
