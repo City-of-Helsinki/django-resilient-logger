@@ -7,8 +7,6 @@ logger = logging.getLogger(__name__)
 
 
 class ResilientLogHandler(logging.Handler):
-    required_fields: list[str]
-
     def __init__(
         self,
         level: int = logging.NOTSET,

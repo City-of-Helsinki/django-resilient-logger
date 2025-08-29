@@ -13,11 +13,6 @@ TResilientLogger = TypeVar("TResilientLogger", bound="ResilientLogger")
 
 
 class ResilientLogger:
-    _batch_limit: int
-    _chunk_size: int
-    _log_sources: list[type[AbstractLogSource]]
-    _log_targets: list[AbstractLogTarget]
-
     def __init__(
         self,
         batch_limit: int,

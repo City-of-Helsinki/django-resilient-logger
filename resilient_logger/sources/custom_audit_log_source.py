@@ -10,7 +10,6 @@ from resilient_logger.utils import get_resilient_logger_source_config, parse_cla
 
 
 class CustomAuditLogSource(AbstractLogSource):
-    log: CustomAuditLogEntryModel
     path_to_date: list[str]
 
     def __init__(self, log: CustomAuditLogEntryModel):

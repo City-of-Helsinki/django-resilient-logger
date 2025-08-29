@@ -32,9 +32,6 @@ class ElasticsearchLogTarget(AbstractLogTarget):
     - `es_port`: 9200
     """
 
-    _client: Elasticsearch
-    _index: str
-
     def __init__(
         self,
         *,

@@ -4,8 +4,6 @@ from resilient_logger.sources import AbstractLogSource
 
 
 class AbstractLogTarget(ABC):
-    required: bool
-
     def __init__(self, required: bool = True):
         """
         Base class for logging targets.
