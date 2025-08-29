@@ -31,4 +31,25 @@ TEMPLATES = [
     },
 ]
 
-RESILIENT_LOGGER = {}
+RESILIENT_LOGGER = {
+    "sources": [
+        {
+            "class": "resilient_logger.sources.ResilientLogSource",
+        },
+        {
+            "class": "resilient_logger.sources.CustomAuditLogSource",
+            "table_name": "resilient_logger_resilientlogentry",
+            "date_time_field": "message.date_time",
+        },
+    ],
+    "targets": [
+        {
+            "class": "resilient_logger.targets.ProxyLogTarget",
+            "name": "proxy-target",
+        }
+    ],
+    "batch_limit": 5000,
+    "chunk_size": 500,
+    "submit_unsent_entries": True,
+    "clear_sent_entries": True,
+}

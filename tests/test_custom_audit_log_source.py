@@ -2,7 +2,6 @@ import logging
 from datetime import datetime
 
 import pytest
-from django.test import override_settings
 
 from resilient_logger.models.custom_audit_log_entry import (
     CustomAuditLogEntryModel,
@@ -12,7 +11,6 @@ from resilient_logger.models.resilient_log_entry import (
 )
 from resilient_logger.sources import CustomAuditLogSource
 from resilient_logger.utils import get_resilient_logger_config
-from tests.testdata.testconfig import VALID_CONFIG_ALL_FIELDS_WITH_TABLE_NAME
 
 table_name = ResilientLogEntry._meta.db_table
 fake_date_time = datetime(2025, 1, 1, 0, 0, 0)
@@ -21,7 +19,6 @@ fake_date_time = datetime(2025, 1, 1, 0, 0, 0)
 @pytest.fixture(autouse=True)
 def setup():
     get_resilient_logger_config.cache_clear()
-    CustomAuditLogEntryModel.init_model.cache_clear()
 
 
 def create_objects(count: int) -> list[ResilientLogEntry]:
@@ -43,7 +40,6 @@ def object_to_auditlog_source(model: ResilientLogEntry) -> CustomAuditLogSource:
 
 
 @pytest.mark.django_db
-@override_settings(RESILIENT_LOGGER=VALID_CONFIG_ALL_FIELDS_WITH_TABLE_NAME)
 def test_mark_sent():
     [object] = create_objects(1)
 
@@ -58,7 +54,6 @@ def test_mark_sent():
 
 
 @pytest.mark.django_db
-@override_settings(RESILIENT_LOGGER=VALID_CONFIG_ALL_FIELDS_WITH_TABLE_NAME)
 def test_get_unsent_entries():
     num_objects = 3
     objects = create_objects(num_objects)
@@ -88,7 +83,6 @@ def test_get_unsent_entries():
 
 
 @pytest.mark.django_db
-@override_settings(RESILIENT_LOGGER=VALID_CONFIG_ALL_FIELDS_WITH_TABLE_NAME)
 def test_clear_sent_entries():
     logger = logging.getLogger(__name__)
     logger.error(ResilientLogEntry._meta.db_table)

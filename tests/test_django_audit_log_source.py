@@ -1,10 +1,8 @@
 import pytest
 from auditlog.models import LogEntry
-from django.test import override_settings
 
 from resilient_logger.sources import DjangoAuditLogSource
 from tests.models import DummyModel
-from tests.testdata.testconfig import VALID_CONFIG_ALL_FIELDS
 
 
 def create_objects(count: int) -> list[DummyModel]:
@@ -33,7 +31,6 @@ def test_mark_sent():
 
 
 @pytest.mark.django_db
-@override_settings(RESILIENT_LOGGER=VALID_CONFIG_ALL_FIELDS)
 def test_get_unsent_entries():
     num_objects = 3
     objects = create_objects(num_objects)
@@ -65,7 +62,6 @@ def test_get_unsent_entries():
 
 
 @pytest.mark.django_db
-@override_settings(RESILIENT_LOGGER=VALID_CONFIG_ALL_FIELDS)
 def test_clear_sent_entries():
     num_objects = 3
     objects = create_objects(num_objects)

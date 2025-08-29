@@ -10,7 +10,6 @@ from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models
 
 from resilient_logger.errors import MissingContextError
-from resilient_logger.sources import AbstractLogSource
 
 
 class ResilientLoggerConfig(TypedDict):
@@ -160,8 +159,13 @@ def content_hash(contents: dict[str, Any]) -> str:
 
 
 def create_target_document(
-    entry: AbstractLogSource, fallback_level=logging.INFO
+    entry: models.Model, fallback_level=logging.INFO
 ) -> dict[str, Any]:
+    from resilient_logger.sources import AbstractLogSource
+
+    if not isinstance(entry, AbstractLogSource):
+        raise RuntimeError("entry is not based on AbstractLogSource")
+
     message = entry.get_message()
     document = entry.get_context() or {}
     log_level = entry.get_level() or fallback_level

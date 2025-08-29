@@ -1,4 +1,5 @@
 from datetime import timedelta
+from functools import cache
 from typing import Any, Iterator, Optional, Union
 
 from django.db import transaction
@@ -10,20 +11,32 @@ from resilient_logger.utils import get_resilient_logger_source_config, parse_cla
 
 
 class CustomAuditLogSource(AbstractLogSource):
-    path_to_date: list[str]
+    date_path_parts: list[str]
 
     def __init__(self, log: CustomAuditLogEntryModel):
-        source_name = parse_class_path(self.__class__)
+        self._initialize()
+        self.log = log
+
+    @classmethod
+    @cache
+    def _initialize(cls) -> None:
+        source_name = parse_class_path(cls)
         config = get_resilient_logger_source_config(source_name)
 
+        table_name: str = config.get("table_name", None)
         date_time_field: str = config.get("date_time_field", None)
+
+        if not table_name:
+            raise RuntimeError(
+                f"table_name is not found from {source_name} source definition"
+            )
+
         if not date_time_field:
             raise RuntimeError(
                 f"date_time_field is not found from {source_name} source definition"
             )
 
-        self.log = log
-        self.path_to_date = date_time_field.split(".")
+        cls.date_path_parts = date_time_field.split(".")
 
     def get_id(self) -> Union[str, int]:
         return self.log.id
@@ -50,7 +63,7 @@ class CustomAuditLogSource(AbstractLogSource):
     def _parse_timestamp(self) -> str:
         current = self.log
 
-        for path_part in self.path_to_date:
+        for path_part in self.date_path_parts:
             current = (
                 current.get(path_part)
                 if isinstance(current, dict)

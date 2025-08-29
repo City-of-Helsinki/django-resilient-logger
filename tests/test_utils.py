@@ -5,7 +5,6 @@ from resilient_logger.utils import get_resilient_logger_config
 from tests.testdata.testconfig import (
     INVALID_CONFIG_MISSING_SOURCES,
     INVALID_CONFIG_MISSING_TARGETS,
-    VALID_CONFIG_ALL_FIELDS,
     VALID_CONFIG_MISSING_OPTIONAL,
 )
 
@@ -13,12 +12,6 @@ from tests.testdata.testconfig import (
 @pytest.fixture(autouse=True)
 def setup():
     get_resilient_logger_config.cache_clear()
-
-
-@override_settings(RESILIENT_LOGGER=VALID_CONFIG_ALL_FIELDS)
-def test_valid_config_all_fields():
-    config = get_resilient_logger_config()
-    assert config == VALID_CONFIG_ALL_FIELDS
 
 
 @override_settings(RESILIENT_LOGGER=VALID_CONFIG_MISSING_OPTIONAL)

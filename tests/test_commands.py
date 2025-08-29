@@ -2,11 +2,9 @@ import logging
 
 import pytest
 from django.core.management import call_command
-from django.test import override_settings
 
 from resilient_logger.sources import ResilientLogSource
 from resilient_logger.utils import get_resilient_logger_config
-from tests.testdata.testconfig import VALID_CONFIG_ALL_FIELDS
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +28,6 @@ def setup():
 
 
 @pytest.mark.django_db
-@override_settings(RESILIENT_LOGGER=VALID_CONFIG_ALL_FIELDS)
 def test_submit_unsent_entries(caplog: pytest.LogCaptureFixture):
     logger_name = "resilient_logger.management.commands.submit_unsent_entries"
     num_log_entries = 10
@@ -50,7 +47,6 @@ def test_submit_unsent_entries(caplog: pytest.LogCaptureFixture):
 
 
 @pytest.mark.django_db
-@override_settings(RESILIENT_LOGGER=VALID_CONFIG_ALL_FIELDS)
 def test_clear_sent_entries(caplog: pytest.LogCaptureFixture):
     logger_name = "resilient_logger.management.commands.clear_sent_entries"
     num_log_entries = 10
