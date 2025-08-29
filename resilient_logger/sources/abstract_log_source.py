@@ -1,5 +1,29 @@
 from abc import ABC, abstractmethod
-from typing import Any, Iterator, Optional, TypeVar, Union
+from datetime import datetime
+from typing import Iterator, Optional, TypedDict, TypeVar, Union
+
+AuditLogEvent = TypedDict(
+    "AuditLogEvent",
+    {
+        "actor": str,
+        "date_time": datetime,
+        "operation": str,
+        "origin": str,
+        "target": str,
+        "environment": str,
+        "message": str,
+        "level": Optional[int],
+        "extra": Optional[dict],
+    },
+)
+
+AuditLogDocument = TypedDict(
+    "AuditLogDocument",
+    {
+        "@timestamp": str,
+        "audit_event": AuditLogEvent,
+    },
+)
 
 TAbstractLogSource = TypeVar("TAbstractLogSource", bound="AbstractLogSource")
 
@@ -16,15 +40,7 @@ class AbstractLogSource(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def get_level(self) -> Optional[int]:
-        raise NotImplementedError()
-
-    @abstractmethod
-    def get_message(self) -> Any:
-        raise NotImplementedError()
-
-    @abstractmethod
-    def get_context(self) -> Any:
+    def get_document(self) -> AuditLogDocument:
         raise NotImplementedError()
 
     @abstractmethod

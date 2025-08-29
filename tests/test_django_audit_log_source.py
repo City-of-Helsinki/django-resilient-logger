@@ -51,9 +51,7 @@ def test_get_unsent_entries():
 
     for i in range(num_objects):
         assert actual_entries[i].get_id() == unsent_entries[i].get_id()
-        assert actual_entries[i].get_context() == unsent_entries[i].get_context()
-        assert actual_entries[i].get_level() == unsent_entries[i].get_level()
-        assert actual_entries[i].get_message() == unsent_entries[i].get_message()
+        assert actual_entries[i].get_document() == unsent_entries[i].get_document()
         actual_entries[i].mark_sent()
 
     unsent_entries = list(DjangoAuditLogSource.get_unsent_entries(500))

@@ -9,7 +9,6 @@ from django.conf import settings
 from django.core.serializers.json import DjangoJSONEncoder
 
 from resilient_logger.errors.missing_context_error import MissingContextError
-from resilient_logger.sources import AbstractLogSource
 
 
 class ResilientLoggerConfig(TypedDict):
@@ -123,21 +122,3 @@ def get_resilient_logger_config() -> ResilientLoggerConfig:
 def content_hash(contents: dict[str, Any]) -> str:
     json_repr = json.dumps(contents, sort_keys=True, cls=DjangoJSONEncoder)
     return hashlib.sha256(json_repr.encode()).hexdigest()
-
-
-def create_target_document(
-    entry: AbstractLogSource, fallback_level=logging.INFO
-) -> dict[str, Any]:
-    message = entry.get_message()
-    document = entry.get_context() or {}
-    log_level = entry.get_level() or fallback_level
-
-    document["entry_id"] = entry.get_id()
-
-    if message is not None:
-        document["log_message"] = message
-
-    if log_level is not None:
-        document["log_level"] = log_level
-
-    return document

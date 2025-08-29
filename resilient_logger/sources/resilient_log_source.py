@@ -1,11 +1,13 @@
 from datetime import timedelta
-from typing import Any, Iterator, Optional, TypeVar, Union
+from typing import Any, Iterator, TypeVar, Union
 
 from django.db import transaction
 from django.utils import timezone
 
 from resilient_logger.models import ResilientLogEntry
 from resilient_logger.sources import AbstractLogSource
+from resilient_logger.sources.abstract_log_source import AuditLogDocument
+from resilient_logger.utils import get_resilient_logger_config
 
 TResilientLogSource = TypeVar("TResilientLogSource", bound="ResilientLogSource")
 
@@ -29,14 +31,27 @@ class ResilientLogSource(AbstractLogSource):
     def get_id(self) -> Union[str, int]:
         return self.log.id
 
-    def get_level(self) -> Optional[int]:
-        return self.log.level
+    def get_document(self) -> AuditLogDocument:
+        config = get_resilient_logger_config()
+        context = (self.log.context or {}).copy()
+        actor = context.pop("actor", "unknown")
+        operation = context.pop("operation", "MANUAL")
+        target = context.pop("target", "unknown")
 
-    def get_message(self) -> Any:
-        return self.log.message
-
-    def get_context(self) -> Any:
-        return self.log.context
+        return {
+            "@timestamp": self.log.created_at,
+            "audit_event": {
+                "actor": actor,
+                "date_time": self.log.created_at,
+                "operation": operation,
+                "origin": config["origin"],
+                "target": target,
+                "environment": config["environment"],
+                "message": self.log.message,
+                "level": self.log.level,
+                "extra": context,
+            },
+        }
 
     def is_sent(self) -> bool:
         return self.log.is_sent

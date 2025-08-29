@@ -6,7 +6,7 @@ from elasticsearch import ConflictError, Elasticsearch
 
 from resilient_logger.sources import AbstractLogSource
 from resilient_logger.targets import AbstractLogTarget
-from resilient_logger.utils import content_hash, create_target_document
+from resilient_logger.utils import content_hash
 
 # Constants
 ES_STATUS_CREATED = "created"
@@ -66,7 +66,7 @@ class ElasticsearchLogTarget(AbstractLogTarget):
         )
 
     def submit(self, entry: AbstractLogSource) -> bool:
-        document = create_target_document(entry)
+        document = entry.get_document()
         hash = content_hash(document)
 
         try:
