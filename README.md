@@ -56,11 +56,11 @@ RESILIENT_LOGGER = {
     "origin": "NameOfTheApplication",
     "environment": "dev",
     "sources": [
-        { "class": "resilient_logger.resilient_log_source.ResilientLogSource" },
-        { "class": "resilient_logger.django_audit_log_source.DjangoAuditLogSource" },
+        { "class": "resilient_logger.sources.ResilientLogSource" },
+        { "class": "resilient_logger.sources.DjangoAuditLogSource" },
     ],
     "targets": [{
-        "class": "resilient_logger.elasticsearch_log_target.ElasticsearchLogTarget",
+        "class": "resilient_logger.targets.ElasticsearchLogTarget",
         "es_url": "https://ELASTICSEARCH_HOST:443",
         "es_username": "ELASTICSEARCH_USERNAME",
         "es_password": "ELASTICSEARCH_PASSWORD",

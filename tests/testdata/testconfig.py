@@ -1,12 +1,12 @@
 VALID_CONFIG_ALL_FIELDS = {
     "sources": [
         {
-            "class": "resilient_logger.resilient_log_source.ResilientLogSource",
+            "class": "resilient_logger.sources.ResilientLogSource",
         }
     ],
     "targets": [
         {
-            "class": "resilient_logger.proxy_log_target.ProxyLogTarget",
+            "class": "resilient_logger.targets.ProxyLogTarget",
             "name": "proxy-target",
         }
     ],
@@ -19,12 +19,12 @@ VALID_CONFIG_ALL_FIELDS = {
 VALID_CONFIG_MISSING_OPTIONAL = {
     "sources": [
         {
-            "class": "resilient_logger.resilient_log_source.ResilientLogSource",
+            "class": "resilient_logger.sources.ResilientLogSource",
         }
     ],
     "targets": [
         {
-            "class": "resilient_logger.proxy_log_target.ProxyLogTarget",
+            "class": "resilient_logger.targets.ProxyLogTarget",
             "name": "proxy-target",
         }
     ],
@@ -33,7 +33,7 @@ VALID_CONFIG_MISSING_OPTIONAL = {
 INVALID_CONFIG_MISSING_TARGETS = {
     "sources": [
         {
-            "class": "resilient_logger.resilient_log_source.ResilientLogSource",
+            "class": "resilient_logger.sources.ResilientLogSource",
         }
     ],
     "batch_limit": 5000,
@@ -45,7 +45,7 @@ INVALID_CONFIG_MISSING_TARGETS = {
 INVALID_CONFIG_MISSING_SOURCES = {
     "targets": [
         {
-            "class": "resilient_logger.proxy_log_target.ProxyLogTarget",
+            "class": "resilient_logger.targets.ProxyLogTarget",
             "name": "proxy-target",
         }
     ],
