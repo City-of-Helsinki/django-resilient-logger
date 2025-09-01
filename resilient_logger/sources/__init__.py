@@ -6,4 +6,6 @@ from .resilient_log_source import ResilientLogSource as ResilientLogSource
 try:
     from .django_audit_log_source import DjangoAuditLogSource as DjangoAuditLogSource
 except ImportError:
-    DjangoAuditLogSource = unavailable_class("DjangoAuditLogSource", "django-auditlog")
+    DjangoAuditLogSource = unavailable_class(
+        "DjangoAuditLogSource", ["django-auditlog"]
+    )

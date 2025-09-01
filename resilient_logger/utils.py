@@ -1,6 +1,7 @@
 import hashlib
 import json
 import logging
+from collections.abc import Sequence
 from functools import cache
 from importlib import import_module
 from typing import Any, Optional, TypedDict, TypeVar
@@ -124,7 +125,7 @@ def content_hash(contents: dict[str, Any]) -> str:
     return hashlib.sha256(json_repr.encode()).hexdigest()
 
 
-def unavailable_class(name: str, dependency: str):
+def unavailable_class(name: str, dependencies: Sequence[str]):
     """
     Creates a placeholder class that raises ImportError on instantiation.
 
@@ -132,15 +133,14 @@ def unavailable_class(name: str, dependency: str):
         name (str): Name of the class (for nicer repr).
         dependency (str): The missing dependency to mention in the error.
     """
+    deps = ", ".join(f"'{d}'" for d in dependencies)
 
     class _UnavailableClass:
         def __init__(self, *args, **kwargs):
-            raise ImportError(
-                f"{name} requires the optional dependency '{dependency}'. "
-            )
+            raise ImportError(f"{name} requires the optional dependencies: {deps}. ")
 
         def __repr__(self):
-            return f"<Unavailable class {name} (missing dependency '{dependency}')>"
+            return f"<Unavailable class {name} (missing dependencies: {deps})>"
 
     _UnavailableClass.__name__ = name
     return _UnavailableClass

@@ -1,3 +1,6 @@
+import importlib
+from unittest.mock import patch
+
 import pytest
 from auditlog.models import LogEntry
 from django.test import override_settings
@@ -83,3 +86,15 @@ def test_clear_sent_entries():
 
     cleaned_ids = DjangoAuditLogSource.clear_sent_entries(0)
     assert len(cleaned_ids) == 0
+
+
+def test_optional_django_audit_log():
+    with patch.dict(
+        "sys.modules", {"resilient_logger.sources.django_audit_log_source": None}
+    ):
+        import resilient_logger.sources as sources
+
+        importlib.reload(sources)
+
+        with pytest.raises(ImportError):
+            sources.DjangoAuditLogSource()

@@ -1,7 +1,7 @@
 import pytest
 from django.test import override_settings
 
-from resilient_logger.utils import get_resilient_logger_config
+from resilient_logger.utils import get_resilient_logger_config, unavailable_class
 from tests.testdata.testconfig import (
     INVALID_CONFIG_MISSING_SOURCES,
     INVALID_CONFIG_MISSING_TARGETS,
@@ -40,3 +40,11 @@ def test_invalid_config_missing_targets():
 def test_invalid_config_missing_sources():
     with pytest.raises(RuntimeError):
         get_resilient_logger_config()
+
+
+def test_unavailable_class():
+    with pytest.raises(ImportError) as ex:
+        placeholder_class = unavailable_class("ClassName", ["library-name"])
+        placeholder_class()
+
+    assert ex.match("ClassName requires the optional dependencies: 'library-name'.")
