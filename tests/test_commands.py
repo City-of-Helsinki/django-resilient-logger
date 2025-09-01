@@ -4,7 +4,7 @@ import pytest
 from django.core.management import call_command
 from django.test import override_settings
 
-from resilient_logger.resilient_log_source import ResilientLogSource
+from resilient_logger.sources import ResilientLogSource
 from tests.testdata.testconfig import VALID_CONFIG_ALL_FIELDS
 
 logger = logging.getLogger(__name__)

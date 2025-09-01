@@ -1,0 +1,3 @@
+from .abstract_log_target import AbstractLogTarget as AbstractLogTarget
+from .elasticsearch_log_target import ElasticsearchLogTarget as ElasticsearchLogTarget
+from .proxy_log_target import ProxyLogTarget as ProxyLogTarget

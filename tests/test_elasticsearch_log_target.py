@@ -2,7 +2,7 @@ from base64 import b64encode
 
 import pytest
 
-from resilient_logger.elasticsearch_log_target import ElasticsearchLogTarget
+from resilient_logger.targets import ElasticsearchLogTarget
 
 scheme = "https"
 host = "host"

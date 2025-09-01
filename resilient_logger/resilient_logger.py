@@ -1,10 +1,11 @@
 import logging
 from typing import Iterator, TypeVar, cast
 
-from resilient_logger.abstract_log_source import AbstractLogSource
-from resilient_logger.abstract_log_target import AbstractLogTarget
-from resilient_logger.utils import dynamic_class, get_resilient_logger_config
 from django.db import transaction
+
+from resilient_logger.sources import AbstractLogSource
+from resilient_logger.targets import AbstractLogTarget
+from resilient_logger.utils import dynamic_class, get_resilient_logger_config
 
 logger = logging.getLogger(__name__)
 
@@ -12,11 +13,6 @@ TResilientLogger = TypeVar("TResilientLogger", bound="ResilientLogger")
 
 
 class ResilientLogger:
-    _batch_limit: int
-    _chunk_size: int
-    _log_sources: list[type[AbstractLogSource]]
-    _log_targets: list[AbstractLogTarget]
-
     def __init__(
         self,
         batch_limit: int,
@@ -81,8 +77,6 @@ class ResilientLogger:
 
         return results
 
-
-
     @transaction.atomic
     def clear_sent_entries(self, days_to_keep: int = 30) -> list[str]:
         """
@@ -95,7 +89,7 @@ class ResilientLogger:
             deleted_ids += log_source.clear_sent_entries(days_to_keep)
 
         return deleted_ids
-    
+
     def _submit(self, source: AbstractLogSource) -> bool:
         for log_target in self._log_targets:
             submitted = False

@@ -14,9 +14,6 @@ class Command(BaseCommand):
         "only clear if settings.CLEAR_SENT_ENTRIES is set to True (default: False)"
     )
 
-    should_clear: bool
-    resilient_logger: ResilientLogger
-
     def __init__(self):
         settings = get_resilient_logger_config()
         self.should_clear = settings["clear_sent_entries"] or False

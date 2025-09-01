@@ -4,9 +4,9 @@ from urllib.parse import urlparse
 
 from elasticsearch import ConflictError, Elasticsearch
 
-from resilient_logger.abstract_log_source import AbstractLogSource
-from resilient_logger.abstract_log_target import AbstractLogTarget
-from resilient_logger.utils import content_hash, create_target_document
+from resilient_logger.sources import AbstractLogSource
+from resilient_logger.targets import AbstractLogTarget
+from resilient_logger.utils import content_hash
 
 # Constants
 ES_STATUS_CREATED = "created"
@@ -31,9 +31,6 @@ class ElasticsearchLogTarget(AbstractLogTarget):
     - `es_scheme`: https
     - `es_port`: 9200
     """
-
-    _client: Elasticsearch
-    _index: str
 
     def __init__(
         self,
@@ -69,7 +66,7 @@ class ElasticsearchLogTarget(AbstractLogTarget):
         )
 
     def submit(self, entry: AbstractLogSource) -> bool:
-        document = create_target_document(entry)
+        document = entry.get_document()
         hash = content_hash(document)
 
         try:
@@ -103,6 +100,5 @@ class ElasticsearchLogTarget(AbstractLogTarget):
             Unknown exception, log it and keep going to avoid transaction rollbacks.
             """
             logger.exception(f"Entry with key {hash} failed.")
-
 
         return False

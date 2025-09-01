@@ -1,5 +1,5 @@
 from datetime import timedelta
-from typing import Any, Iterator, Optional, Union
+from typing import Iterator, Optional, Union
 
 from auditlog.models import LogEntry
 from django.contrib.auth.models import AbstractUser
@@ -7,28 +7,27 @@ from django.db import transaction
 from django.db.models import Q
 from django.utils import timezone
 
-from resilient_logger.abstract_log_source import AbstractLogSource
+from resilient_logger.sources import AbstractLogSource
+from resilient_logger.sources.abstract_log_source import AuditLogDocument
 from resilient_logger.utils import get_resilient_logger_config
 
 
 class DjangoAuditLogSource(AbstractLogSource):
-    log: LogEntry
-
     def __init__(self, log: LogEntry):
         self.log = log
 
     def get_id(self) -> Union[str, int]:
         return self.log.object_pk
 
-    def get_level(self) -> Optional[int]:
-        return None
-
-    def get_message(self) -> Any:
-        return self.log.changes_str
-
-    def get_context(self) -> Any:
+    def get_document(self) -> AuditLogDocument:
         config = get_resilient_logger_config()
         actor: Optional[AbstractUser] = self.log.actor
+        # Looks up the action tuple [int, str] and uses name of it
+        action = LogEntry.Action.choices[self.log.action][1]
+        extra = {
+            **self.log.additional_data,
+            "changes": self.log.changes,
+        }
 
         return {
             "@timestamp": self.log.timestamp,
@@ -37,11 +36,12 @@ class DjangoAuditLogSource(AbstractLogSource):
                 if actor is None
                 else actor.get_full_name() or str(actor.email),
                 "date_time": self.log.timestamp,
-                "operation": str(self.log.action),
+                "operation": str(action).upper(),
                 "origin": config["origin"],
                 "target": self.log.object_repr,
                 "environment": config["environment"],
-                "message": self.log.changes,
+                "message": self.log.changes_str,
+                "extra": extra,
             },
         }
 
