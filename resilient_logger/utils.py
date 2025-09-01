@@ -122,3 +122,25 @@ def get_resilient_logger_config() -> ResilientLoggerConfig:
 def content_hash(contents: dict[str, Any]) -> str:
     json_repr = json.dumps(contents, sort_keys=True, cls=DjangoJSONEncoder)
     return hashlib.sha256(json_repr.encode()).hexdigest()
+
+
+def unavailable_class(name: str, dependency: str):
+    """
+    Creates a placeholder class that raises ImportError on instantiation.
+
+    Parameters:
+        name (str): Name of the class (for nicer repr).
+        dependency (str): The missing dependency to mention in the error.
+    """
+
+    class _UnavailableClass:
+        def __init__(self, *args, **kwargs):
+            raise ImportError(
+                f"{name} requires the optional dependency '{dependency}'. "
+            )
+
+        def __repr__(self):
+            return f"<Unavailable class {name} (missing dependency '{dependency}')>"
+
+    _UnavailableClass.__name__ = name
+    return _UnavailableClass
