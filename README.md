@@ -19,6 +19,10 @@
 If for some reason synchronization to external service does not work at the given time, it will retry it at later time.
 Management tasks require an external cron trigger.
 
+Cron triggers are designed to be run in following schedule:
+- `submit_unsent_entries` once in every 15 minutes.
+- `clear_sent_entries` once a month.
+
 To manually trigger the scheduled tasks, one can run commands:
 ```bash
 python ./manage.py submit_unsent_entries
@@ -50,7 +54,6 @@ Configuration must contain required `origin`, `environment`, `sources` and `targ
 - `sources` expects array of objects with property `class` (full class path) being present. Other properties are ignored.
 - `targets` expects array of objects with `class` (full class path) and being present. Others are passed as constructor parameters.
 
-
 ```python
 RESILIENT_LOGGER = {
     "origin": "NameOfTheApplication",
@@ -61,10 +64,10 @@ RESILIENT_LOGGER = {
     ],
     "targets": [{
         "class": "resilient_logger.targets.ElasticsearchLogTarget",
-        "es_url": "https://ELASTICSEARCH_HOST:443",
-        "es_username": "ELASTICSEARCH_USERNAME",
-        "es_password": "ELASTICSEARCH_PASSWORD",
-        "es_index": "ELASTICSEARCH_INDEX",
+        "es_url": env("AUDIT_LOG_ES_URL"),
+        "es_username": env("AUDIT_LOG_ES_USERNAME"),
+        "es_password": env("AUDIT_LOG_ES_PASSWORD"),
+        "es_index": env("AUDIT_LOG_ES_INDEX"),
         "required": True
     }],
     "batch_limit": 5000,
@@ -91,6 +94,7 @@ LOGGING = {
             ...
         },
     ...
+    }
 }
 ```
 
