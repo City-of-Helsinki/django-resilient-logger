@@ -24,8 +24,10 @@ class DjangoAuditLogSource(AbstractLogSource):
         actor: Optional[AbstractUser] = self.log.actor
         # Looks up the action tuple [int, str] and uses name of it
         action = LogEntry.Action.choices[self.log.action][1]
+        additional_data = self.log.additional_data or {}
+
         extra = {
-            **self.log.additional_data,
+            **additional_data,
             "changes": self.log.changes,
         }
 
