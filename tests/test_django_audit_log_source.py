@@ -75,7 +75,7 @@ def test_clear_sent_entries():
     for actual_entry in actual_entries:
         actual_entry.mark_sent()
 
-    actual_ids = [entry.get_id() for entry in actual_entries]
+    actual_ids = [str(entry.get_id()) for entry in actual_entries]
     cleaned_ids = DjangoAuditLogSource.clear_sent_entries(0)
 
     assert len(actual_ids) == num_objects

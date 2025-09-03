@@ -17,7 +17,7 @@ class DjangoAuditLogSource(AbstractLogSource):
         self.log = log
 
     def get_id(self) -> Union[str, int]:
-        return self.log.object_pk
+        return self.log.id
 
     def get_document(self) -> AuditLogDocument:
         config = get_resilient_logger_config()
@@ -90,7 +90,7 @@ class DjangoAuditLogSource(AbstractLogSource):
             timestamp__lte=(timezone.now() - timedelta(days=days_to_keep)),
         ).select_for_update()
 
-        deleted_ids = list(entries.values_list("object_pk", flat=True))
+        deleted_ids = list(entries.values_list("id", flat=True))
         entries.delete()
 
         return [str(deleted_id) for deleted_id in deleted_ids]
