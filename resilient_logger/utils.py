@@ -144,3 +144,7 @@ def unavailable_class(name: str, dependencies: Sequence[str]):
 
     _UnavailableClass.__name__ = name
     return _UnavailableClass
+
+
+def value_as_dict(value: str | dict) -> dict:
+    return {"value": value} if isinstance(value, str) else value
