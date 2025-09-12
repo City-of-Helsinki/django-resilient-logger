@@ -22,9 +22,13 @@ class DjangoAuditLogSource(AbstractLogSource):
     def get_document(self) -> AuditLogDocument:
         config = get_resilient_logger_config()
         actor: Optional[AbstractUser] = self.log.actor
+
         # Looks up the action tuple [int, str] and uses name of it
         action = LogEntry.Action.choices[self.log.action][1]
-        additional_data = self.log.additional_data or {}
+        additional_data = (self.log.additional_data or {}).copy()
+
+        # Remove is_sent variable from additional_data, it's only for local tracking
+        additional_data.pop("is_sent", None)
 
         extra = {
             **additional_data,
@@ -34,13 +38,13 @@ class DjangoAuditLogSource(AbstractLogSource):
         return {
             "@timestamp": self.log.timestamp,
             "audit_event": {
-                "actor": "unknown"
-                if actor is None
-                else actor.get_full_name() or str(actor.email),
+                "actor": self._parse_actor(actor),
                 "date_time": self.log.timestamp,
                 "operation": str(action).upper(),
                 "origin": config["origin"],
-                "target": self.log.object_repr,
+                "target": {
+                    "value": self.log.object_repr,
+                },
                 "environment": config["environment"],
                 "message": self.log.changes_str,
                 "extra": extra,
@@ -94,3 +98,10 @@ class DjangoAuditLogSource(AbstractLogSource):
         entries.delete()
 
         return [str(deleted_id) for deleted_id in deleted_ids]
+
+    @staticmethod
+    def _parse_actor(raw_actor: Optional[AbstractUser]) -> dict:
+        if raw_actor:
+            return {"name": raw_actor.get_full_name(), "email": raw_actor.email}
+
+        return {"name": None, "email": None}

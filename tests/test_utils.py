@@ -1,7 +1,11 @@
 import pytest
 from django.test import override_settings
 
-from resilient_logger.utils import get_resilient_logger_config, unavailable_class
+from resilient_logger.utils import (
+    get_resilient_logger_config,
+    unavailable_class,
+    value_as_dict,
+)
 from tests.testdata.testconfig import (
     INVALID_CONFIG_MISSING_SOURCES,
     INVALID_CONFIG_MISSING_TARGETS,
@@ -48,3 +52,11 @@ def test_unavailable_class():
         placeholder_class()
 
     assert ex.match("ClassName requires the optional dependencies: 'library-name'.")
+
+
+def test_value_as_dict():
+    as_str = "hello"
+    as_dict = {"value": as_str}
+
+    assert value_as_dict(as_str) == as_dict
+    assert value_as_dict(as_dict) == as_dict

@@ -7,7 +7,7 @@ from django.utils import timezone
 from resilient_logger.models import ResilientLogEntry
 from resilient_logger.sources import AbstractLogSource
 from resilient_logger.sources.abstract_log_source import AuditLogDocument
-from resilient_logger.utils import get_resilient_logger_config
+from resilient_logger.utils import get_resilient_logger_config, value_as_dict
 
 TResilientLogSource = TypeVar("TResilientLogSource", bound="ResilientLogSource")
 
@@ -41,11 +41,11 @@ class ResilientLogSource(AbstractLogSource):
         return {
             "@timestamp": self.log.created_at,
             "audit_event": {
-                "actor": actor,
+                "actor": value_as_dict(actor),
                 "date_time": self.log.created_at,
                 "operation": operation,
                 "origin": config["origin"],
-                "target": target,
+                "target": value_as_dict(target),
                 "environment": config["environment"],
                 "message": self.log.message,
                 "level": self.log.level,
