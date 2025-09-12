@@ -5,11 +5,11 @@ from typing import Iterator, Optional, TypedDict, TypeVar, Union
 AuditLogEvent = TypedDict(
     "AuditLogEvent",
     {
-        "actor": str,
+        "actor": dict,
         "date_time": datetime,
         "operation": str,
         "origin": str,
-        "target": str,
+        "target": dict,
         "environment": str,
         "message": str,
         "level": Optional[int],
