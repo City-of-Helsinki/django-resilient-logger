@@ -4,7 +4,7 @@ import logging
 from collections.abc import Sequence
 from functools import cache
 from importlib import import_module
-from typing import Any, Optional, TypedDict, TypeVar
+from typing import Any, Optional, TypedDict, TypeVar, Union
 
 from django.conf import settings
 from django.core.serializers.json import DjangoJSONEncoder
@@ -146,5 +146,15 @@ def unavailable_class(name: str, dependencies: Sequence[str]):
     return _UnavailableClass
 
 
-def value_as_dict(value: str | dict) -> dict:
-    return {"value": value} if isinstance(value, str) else value
+def value_as_dict(value: Union[str, dict]) -> dict:
+    if isinstance(value, str):
+        return {"value": value}
+
+    if isinstance(value, dict):
+        return value
+
+    value_type = type(value).__name__
+
+    raise TypeError(
+        f"Invalid value_as_dict input. Expected 'str | dict', got '{value_type}'"
+    )
