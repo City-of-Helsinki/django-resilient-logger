@@ -1,3 +1,5 @@
+import datetime
+
 import pytest
 from django.test import override_settings
 
@@ -57,6 +59,12 @@ def test_unavailable_class():
 def test_value_as_dict():
     as_str = "hello"
     as_dict = {"value": as_str}
+    invalid = datetime.datetime(2025, 10, 10)
 
     assert value_as_dict(as_str) == as_dict
     assert value_as_dict(as_dict) == as_dict
+
+    with pytest.raises(TypeError) as ex:
+        value_as_dict(invalid)
+
+    assert ex.match("Expected 'str | dict', got 'datetime'")
