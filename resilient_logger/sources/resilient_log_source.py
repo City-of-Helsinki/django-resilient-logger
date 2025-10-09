@@ -37,12 +37,17 @@ class ResilientLogSource(AbstractLogSource):
         actor = context.pop("actor", "unknown")
         operation = context.pop("operation", "MANUAL")
         target = context.pop("target", "unknown")
+        iso_date = (
+            self.log.created_at.astimezone(timezone.utc)
+            .isoformat(timespec="milliseconds")
+            .replace("+00:00", "Z")
+        )
 
         return {
-            "@timestamp": self.log.created_at,
+            "@timestamp": iso_date,
             "audit_event": {
                 "actor": value_as_dict(actor),
-                "date_time": self.log.created_at,
+                "date_time": iso_date,
                 "operation": operation,
                 "origin": config["origin"],
                 "target": value_as_dict(target),
