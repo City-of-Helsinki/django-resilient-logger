@@ -17,7 +17,9 @@ def extract_result(record: logging.LogRecord):
 
 def create_resilient_log_entries(count: int, mark_sent: bool):
     for idx in range(count):
-        entry = ResilientLogSource.create(logging.INFO, "Hello world", {"index": idx})
+        entry = ResilientLogSource.create_structured(
+            message="Hello world", extra={"index": idx}
+        )
 
         if mark_sent:
             entry.mark_sent()
