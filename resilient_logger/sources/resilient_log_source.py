@@ -1,5 +1,5 @@
-from datetime import timedelta
-from typing import Any, Iterator, TypeVar, Union
+import datetime
+from typing import Any, Iterator, Optional, TypeVar, Union
 
 from django.db import transaction
 from django.utils import timezone
@@ -18,7 +18,7 @@ class ResilientLogSource(AbstractLogSource):
 
     @classmethod
     def create(
-        cls: type[TResilientLogSource], level: int, message: Any, context: Any
+        cls: type[TResilientLogSource], *, level: int, message: Any, context: dict
     ) -> TResilientLogSource:
         entry = ResilientLogEntry.objects.create(
             level=level,
@@ -27,6 +27,28 @@ class ResilientLogSource(AbstractLogSource):
         )
 
         return cls(entry)
+
+    @classmethod
+    def create_structured(
+        cls: type[TResilientLogSource],
+        *,
+        message: Any,
+        level: int = 0,
+        operation: str = "MANUAL",
+        actor: Optional[dict] = None,
+        target: Optional[dict] = None,
+        extra: Optional[dict] = None,
+    ) -> TResilientLogSource:
+        return cls.create(
+            level=level,
+            message=message,
+            context={
+                **(extra or {}),
+                "actor": actor or {},
+                "operation": operation,
+                "target": target or {},
+            },
+        )
 
     def get_id(self) -> Union[str, int]:
         return self.log.id
@@ -38,7 +60,7 @@ class ResilientLogSource(AbstractLogSource):
         operation = context.pop("operation", "MANUAL")
         target = context.pop("target", "unknown")
         iso_date = (
-            self.log.created_at.astimezone(timezone.utc)
+            self.log.created_at.astimezone(datetime.timezone.utc)
             .isoformat(timespec="milliseconds")
             .replace("+00:00", "Z")
         )
@@ -82,7 +104,7 @@ class ResilientLogSource(AbstractLogSource):
     def clear_sent_entries(cls, days_to_keep: int = 30) -> list[str]:
         entries = ResilientLogEntry.objects.filter(
             is_sent=True,
-            created_at__lte=(timezone.now() - timedelta(days=days_to_keep)),
+            created_at__lte=(timezone.now() - datetime.timedelta(days=days_to_keep)),
         ).select_for_update()
 
         deleted_ids = list(entries.values_list("id", flat=True))
