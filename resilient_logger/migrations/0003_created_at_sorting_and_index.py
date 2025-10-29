@@ -4,7 +4,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("resilient_logger", "0002_alter_verbose_name"),
     ]
