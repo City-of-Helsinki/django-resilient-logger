@@ -8,8 +8,9 @@ class ResilientLogEntry(models.Model):
     level = models.IntegerField(verbose_name=_("level"), default=0)
     message = models.JSONField(verbose_name=_("message"))
     context = models.JSONField(verbose_name=_("context"), null=True)
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name=_("created at"))
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name=_("created at"), db_index=True)
 
     class Meta:
+        ordering = ['-created_at', '-id']
         verbose_name = _("resilient log entry")
         verbose_name_plural = _("resilient log entries")
