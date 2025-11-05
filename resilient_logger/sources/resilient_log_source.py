@@ -66,6 +66,11 @@ class ResilientLogSource(AbstractLogSource):
             .replace("+00:00", "Z")
         )
 
+        extra = {
+            **context,
+            "source_pk": self.get_id(),
+        }
+
         return {
             "@timestamp": iso_date,
             "audit_event": {
@@ -77,7 +82,7 @@ class ResilientLogSource(AbstractLogSource):
                 "environment": config["environment"],
                 "message": self.log.message,
                 "level": self.log.level,
-                "extra": context,
+                "extra": extra,
             },
         }
 

@@ -33,6 +33,7 @@ class DjangoAuditLogSource(AbstractLogSource):
         extra = {
             **additional_data,
             "changes": self.log.changes,
+            "source_pk": self.get_id(),
         }
 
         return {
