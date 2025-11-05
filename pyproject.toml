@@ -17,16 +17,18 @@ classifiers=[
     "Environment :: Web Environment",
     "Framework :: Django",
     "Framework :: Django :: 4.2",
+    "Framework :: Django :: 5.1",
+    "Framework :: Django :: 5.2",
     "Intended Audience :: Developers",
     "Operating System :: OS Independent",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Topic :: Internet :: WWW/HTTP",
     "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
 ]
@@ -62,7 +64,7 @@ dependencies = [
     "pre-commit",
 ]
 features = ["all"]
-python = "3.9"
+python = "3.10"
 type = "virtual"
 path = ".venv"
 
@@ -82,16 +84,16 @@ parallel = false
 randomize = true
 
 [[tool.hatch.envs.hatch-test.matrix]]
-python = ["3.9"]
-django = ["4.2"]
-
-[[tool.hatch.envs.hatch-test.matrix]]
 python = ["3.10", "3.11", "3.12"]
-django = ["4.2", "5.0", "5.1", "5.2"]
+django = ["4.2", "5.1", "5.2"]
 
 [[tool.hatch.envs.hatch-test.matrix]]
 python = ["3.13"]
 django = ["5.1", "5.2"]
+
+[[tool.hatch.envs.hatch-test.matrix]]
+python = ["3.14"]
+django = ["5.2"]
 
 [tool.hatch.envs.hatch-test.overrides]
 matrix.django.dependencies = [
@@ -115,7 +117,7 @@ DJANGO_SETTINGS_MODULE = "tests.settings"
 pythonpath = "."
 
 [tool.ruff]
-target-version = "py39"
+target-version = "py310"
 
 [tool.ruff.lint]
 select = [
