@@ -1,5 +1,4 @@
 import logging
-from typing import Optional
 from urllib.parse import urlparse
 
 from elasticsearch import ConflictError, Elasticsearch
@@ -38,10 +37,10 @@ class ElasticsearchLogTarget(AbstractLogTarget):
         es_username: str,
         es_password: str,
         es_index: str,
-        es_url: Optional[str] = None,
-        es_host: Optional[str] = None,
-        es_port: Optional[int] = 9200,
-        es_scheme: Optional[str] = "https",
+        es_url: str | None = None,
+        es_host: str | None = None,
+        es_port: int | None = 9200,
+        es_scheme: str | None = "https",
         required: bool = True,
     ) -> None:
         super().__init__(required)
@@ -55,9 +54,9 @@ class ElasticsearchLogTarget(AbstractLogTarget):
                 es_url = f"{es_scheme}://{es_url}"
 
             parsed = urlparse(es_url)
-            scheme: Optional[str] = parsed.scheme
-            host: Optional[str] = parsed.hostname
-            port: Optional[int] = parsed.port or es_port
+            scheme: str | None = parsed.scheme
+            host: str | None = parsed.hostname
+            port: int | None = parsed.port or es_port
 
         self._index = es_index
         self._client = Elasticsearch(

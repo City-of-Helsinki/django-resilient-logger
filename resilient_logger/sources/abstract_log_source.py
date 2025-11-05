@@ -1,21 +1,20 @@
 from abc import ABC, abstractmethod
+from collections.abc import Iterator
 from datetime import datetime
-from typing import Iterator, Optional, TypedDict, TypeVar, Union
+from typing import TypedDict, TypeVar
 
-AuditLogEvent = TypedDict(
-    "AuditLogEvent",
-    {
-        "actor": dict,
-        "date_time": datetime,
-        "operation": str,
-        "origin": str,
-        "target": dict,
-        "environment": str,
-        "message": str,
-        "level": Optional[int],
-        "extra": Optional[dict],
-    },
-)
+
+class AuditLogEvent(TypedDict):
+    actor: dict
+    date_time: datetime
+    operation: str
+    origin: str
+    target: dict
+    environment: str
+    message: str
+    level: int | None
+    extra: dict | None
+
 
 AuditLogDocument = TypedDict(
     "AuditLogDocument",
@@ -36,7 +35,7 @@ class AbstractLogSource(ABC):
     """
 
     @abstractmethod
-    def get_id(self) -> Union[str, int]:
+    def get_id(self) -> str | int:
         raise NotImplementedError()
 
     @abstractmethod
