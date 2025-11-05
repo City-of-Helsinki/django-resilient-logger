@@ -57,7 +57,7 @@ Configuration must contain required `origin`, `environment`, `sources` and `targ
 ```python
 RESILIENT_LOGGER = {
     "origin": "NameOfTheApplication",
-    "environment": "dev",
+    "environment": env("AUDIT_LOG_ENV"),
     "sources": [
         { "class": "resilient_logger.sources.ResilientLogSource" },
         { "class": "resilient_logger.sources.DjangoAuditLogSource" },
