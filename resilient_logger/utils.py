@@ -4,7 +4,7 @@ import logging
 from collections.abc import Sequence
 from functools import cache
 from importlib import import_module
-from typing import Any, Optional, TypedDict, TypeVar, Union
+from typing import Any, TypedDict, TypeVar
 
 from django.conf import settings
 from django.core.serializers.json import DjangoJSONEncoder
@@ -97,9 +97,7 @@ def assert_required_extras(extra: dict[str, Any], required_fields: list[str]) ->
 
 @cache
 def get_resilient_logger_config() -> ResilientLoggerConfig:
-    config: Optional[ResilientLoggerConfig] = getattr(
-        settings, "RESILIENT_LOGGER", None
-    )
+    config: ResilientLoggerConfig | None = getattr(settings, "RESILIENT_LOGGER", None)
 
     if not config:
         raise RuntimeError("RESILIENT_LOGGER setting is missing")
@@ -146,7 +144,7 @@ def unavailable_class(name: str, dependencies: Sequence[str]):
     return _UnavailableClass
 
 
-def value_as_dict(value: Union[str, dict]) -> dict:
+def value_as_dict(value: str | dict) -> dict:
     if isinstance(value, str):
         return {"value": value}
 

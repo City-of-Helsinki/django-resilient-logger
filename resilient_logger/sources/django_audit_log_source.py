@@ -1,5 +1,5 @@
+from collections.abc import Iterator
 from datetime import timedelta
-from typing import Iterator, Optional, Union
 
 from auditlog.models import LogEntry
 from django.contrib.auth.models import AbstractUser
@@ -16,12 +16,12 @@ class DjangoAuditLogSource(AbstractLogSource):
     def __init__(self, log: LogEntry):
         self.log = log
 
-    def get_id(self) -> Union[str, int]:
+    def get_id(self) -> str | int:
         return self.log.id
 
     def get_document(self) -> AuditLogDocument:
         config = get_resilient_logger_config()
-        actor: Optional[AbstractUser] = self.log.actor
+        actor: AbstractUser | None = self.log.actor
 
         # Looks up the action tuple [int, str] and uses name of it
         action = LogEntry.Action.choices[self.log.action][1]
@@ -100,7 +100,7 @@ class DjangoAuditLogSource(AbstractLogSource):
         return [str(deleted_id) for deleted_id in deleted_ids]
 
     @staticmethod
-    def _parse_actor(raw_actor: Optional[AbstractUser]) -> dict:
+    def _parse_actor(raw_actor: AbstractUser | None) -> dict:
         if raw_actor:
             return {"name": raw_actor.get_full_name(), "email": raw_actor.email}
 

@@ -1,5 +1,6 @@
 import datetime
-from typing import Any, Iterator, Optional, TypeVar, Union
+from collections.abc import Iterator
+from typing import Any, TypeVar
 
 from django.db import transaction
 from django.utils import timezone
@@ -35,9 +36,9 @@ class ResilientLogSource(AbstractLogSource):
         message: Any,
         level: int = 0,
         operation: str = "MANUAL",
-        actor: Optional[dict] = None,
-        target: Optional[dict] = None,
-        extra: Optional[dict] = None,
+        actor: dict | None = None,
+        target: dict | None = None,
+        extra: dict | None = None,
     ) -> TResilientLogSource:
         return cls.create(
             level=level,
@@ -50,7 +51,7 @@ class ResilientLogSource(AbstractLogSource):
             },
         )
 
-    def get_id(self) -> Union[str, int]:
+    def get_id(self) -> str | int:
         return self.log.id
 
     def get_document(self) -> AuditLogDocument:

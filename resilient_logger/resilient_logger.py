@@ -1,5 +1,6 @@
 import logging
-from typing import Iterator, TypeVar, cast
+from collections.abc import Iterator
+from typing import TypeVar, cast
 
 from django.db import transaction
 
@@ -109,5 +110,4 @@ class ResilientLogger:
         Queries and returns iterator for all unsent log entries.
         """
         for log_source in self._log_sources:
-            for entry in log_source.get_unsent_entries(self._chunk_size):
-                yield entry
+            yield from log_source.get_unsent_entries(self._chunk_size)
