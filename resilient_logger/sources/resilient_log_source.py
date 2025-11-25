@@ -1,5 +1,6 @@
 import datetime
-from collections.abc import Iterator
+from collections.abc import Iterable, Iterator
+from dataclasses import dataclass
 from typing import Any, TypeVar
 
 from django.db import transaction
@@ -11,6 +12,23 @@ from resilient_logger.sources.abstract_log_source import AuditLogDocument
 from resilient_logger.utils import get_resilient_logger_config, value_as_dict
 
 TResilientLogSource = TypeVar("TResilientLogSource", bound="ResilientLogSource")
+
+
+@dataclass
+class ResilientLogEntryData:
+    level: int
+    message: Any
+    context: dict
+
+
+@dataclass
+class StructuredResilientLogEntryData:
+    message: Any
+    level: int = 0
+    operation: str = "MANUAL"
+    actor: dict | None = None
+    target: dict | None = None
+    extra: dict | None = None
 
 
 class ResilientLogSource(AbstractLogSource):
@@ -28,6 +46,17 @@ class ResilientLogSource(AbstractLogSource):
         )
 
         return cls(entry)
+
+    @classmethod
+    def bulk_create(
+        cls: type[TResilientLogSource], objs: Iterable[ResilientLogEntryData]
+    ) -> Iterable[TResilientLogSource]:
+        entries = ResilientLogEntry.objects.bulk_create(
+            ResilientLogEntry(level=obj.level, message=obj.message, context=obj.context)
+            for obj in objs
+        )
+
+        return [cls(entry) for entry in entries]
 
     @classmethod
     def create_structured(
@@ -50,6 +79,27 @@ class ResilientLogSource(AbstractLogSource):
                 "target": target or {},
             },
         )
+
+    @classmethod
+    def bulk_create_structured(
+        cls: type[TResilientLogSource],
+        objs: list[StructuredResilientLogEntryData],
+    ) -> Iterable[TResilientLogSource]:
+        prepared_objs = [
+            ResilientLogEntryData(
+                level=obj.level,
+                message=obj.message,
+                context={
+                    **(obj.extra or {}),
+                    "actor": obj.actor or {},
+                    "operation": obj.operation,
+                    "target": obj.target or {},
+                },
+            )
+            for obj in objs
+        ]
+
+        return cls.bulk_create(objs=prepared_objs)
 
     def get_id(self) -> str | int:
         return self.log.id
