@@ -116,7 +116,7 @@ pip install -e .
 Install development requirements:
 
 ```bash
-pip install -r requirements-test.txt
+pip install -e ".[all]"
 ```
 
 ## Running tests
