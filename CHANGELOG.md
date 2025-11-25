@@ -1,6 +1,18 @@
 <!-- DOCTOC SKIP -->
 # Changelog
 
+## [1.1.0](https://github.com/City-of-Helsinki/django-resilient-logger/compare/v1.0.0...v1.1.0) (2025-11-25)
+
+
+### Features
+
+* Support bulk create for ResilientLogSource ([aeab1d9](https://github.com/City-of-Helsinki/django-resilient-logger/commit/aeab1d930cad52ac35056920ec4f947acfd079ad))
+
+
+### Bug Fixes
+
+* **readme:** Update instructions for development requirements ([173c521](https://github.com/City-of-Helsinki/django-resilient-logger/commit/173c521a44104353e5faebac6564d4aef8f3ee90))
+
 ## [1.0.0](https://github.com/City-of-Helsinki/django-resilient-logger/compare/v0.3.7...v1.0.0) (2025-11-12)
 
 
