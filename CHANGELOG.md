@@ -1,6 +1,13 @@
 <!-- DOCTOC SKIP -->
 # Changelog
 
+## [1.1.1](https://github.com/City-of-Helsinki/django-resilient-logger/compare/v1.1.0...v1.1.1) (2025-11-28)
+
+
+### Bug Fixes
+
+* Add missing super calls ([be3dc29](https://github.com/City-of-Helsinki/django-resilient-logger/commit/be3dc2973659515762329e107a30ccbdc6c5779b))
+
 ## [1.1.0](https://github.com/City-of-Helsinki/django-resilient-logger/compare/v1.0.0...v1.1.0) (2025-11-25)
 
 
