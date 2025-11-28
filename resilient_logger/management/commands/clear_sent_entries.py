@@ -15,6 +15,7 @@ class Command(BaseCommand):
     )
 
     def __init__(self):
+        super().__init__()
         settings = get_resilient_logger_config()
         self.should_clear = settings["clear_sent_entries"] or False
         self.resilient_logger = ResilientLogger.create()

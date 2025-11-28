@@ -12,6 +12,7 @@ class Command(BaseCommand):
     help = "Send django-resilient-logger entries to centralized log center"
 
     def __init__(self):
+        super().__init__()
         settings = get_resilient_logger_config()
         self.should_submit = settings["submit_unsent_entries"] or False
         self.resilient_logger = ResilientLogger.create()
