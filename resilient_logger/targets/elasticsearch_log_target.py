@@ -1,7 +1,7 @@
 import logging
 from urllib.parse import urlparse
 
-from elasticsearch import ConflictError, Elasticsearch
+from elasticsearch8 import ConflictError, Elasticsearch
 
 from resilient_logger.sources import AbstractLogSource
 from resilient_logger.targets import AbstractLogTarget
