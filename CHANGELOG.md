@@ -1,6 +1,13 @@
 <!-- DOCTOC SKIP -->
 # Changelog
 
+## [1.2.0](https://github.com/City-of-Helsinki/django-resilient-logger/compare/v1.1.1...v1.2.0) (2025-12-16)
+
+
+### Features
+
+* Use elasticsearch8 as a requirement ([ba65a8a](https://github.com/City-of-Helsinki/django-resilient-logger/commit/ba65a8a80aaf67736109886bcb6b627bef65f051))
+
 ## [1.1.1](https://github.com/City-of-Helsinki/django-resilient-logger/compare/v1.1.0...v1.1.1) (2025-11-28)
 
 
