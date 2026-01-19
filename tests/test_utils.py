@@ -9,6 +9,12 @@ from resilient_logger.utils import (
     value_as_dict,
 )
 from tests.testdata.testconfig import (
+    INVALID_CONFIG_EMPTY_ENVIRONMENT,
+    INVALID_CONFIG_EMPTY_ORIGIN,
+    INVALID_CONFIG_EMPTY_SOURCES,
+    INVALID_CONFIG_EMPTY_TARGETS,
+    INVALID_CONFIG_MISSING_ENVIRONMENT,
+    INVALID_CONFIG_MISSING_ORIGIN,
     INVALID_CONFIG_MISSING_SOURCES,
     INVALID_CONFIG_MISSING_TARGETS,
     VALID_CONFIG_ALL_FIELDS,
@@ -38,22 +44,67 @@ def test_valid_config_missing_optional():
 
 @override_settings(RESILIENT_LOGGER=INVALID_CONFIG_MISSING_TARGETS)
 def test_invalid_config_missing_targets():
-    with pytest.raises(RuntimeError):
+    with pytest.raises(RuntimeError, match="missing required key: 'targets'"):
+        get_resilient_logger_config()
+
+
+@override_settings(RESILIENT_LOGGER=INVALID_CONFIG_EMPTY_TARGETS)
+def test_invalid_config_empty_targets():
+    with pytest.raises(
+        RuntimeError, match=r"RESILIENT_LOGGER\['targets'\] failed validation"
+    ):
         get_resilient_logger_config()
 
 
 @override_settings(RESILIENT_LOGGER=INVALID_CONFIG_MISSING_SOURCES)
 def test_invalid_config_missing_sources():
-    with pytest.raises(RuntimeError):
+    with pytest.raises(RuntimeError, match="missing required key: 'sources'"):
+        get_resilient_logger_config()
+
+
+@override_settings(RESILIENT_LOGGER=INVALID_CONFIG_EMPTY_SOURCES)
+def test_invalid_config_empty_sources():
+    with pytest.raises(
+        RuntimeError, match=r"RESILIENT_LOGGER\['sources'\] failed validation"
+    ):
+        get_resilient_logger_config()
+
+
+@override_settings(RESILIENT_LOGGER=INVALID_CONFIG_MISSING_ENVIRONMENT)
+def test_invalid_config_missing_environment():
+    with pytest.raises(RuntimeError, match="missing required key: 'environment'"):
+        get_resilient_logger_config()
+
+
+@override_settings(RESILIENT_LOGGER=INVALID_CONFIG_EMPTY_ENVIRONMENT)
+def test_invalid_config_empty_environment():
+    with pytest.raises(
+        RuntimeError, match=r"RESILIENT_LOGGER\['environment'\] failed validation"
+    ):
+        get_resilient_logger_config()
+
+
+@override_settings(RESILIENT_LOGGER=INVALID_CONFIG_MISSING_ORIGIN)
+def test_invalid_config_missing_origin():
+    with pytest.raises(RuntimeError, match="missing required key: 'origin'"):
+        get_resilient_logger_config()
+
+
+@override_settings(RESILIENT_LOGGER=INVALID_CONFIG_EMPTY_ORIGIN)
+def test_invalid_config_empty_origin():
+    with pytest.raises(
+        RuntimeError, match=r"RESILIENT_LOGGER\['origin'\] failed validation"
+    ):
         get_resilient_logger_config()
 
 
 def test_unavailable_class():
-    with pytest.raises(ImportError) as ex:
+    with pytest.raises(
+        ImportError,
+        match="ClassName requires the optional dependencies: 'library-name'.",
+    ):
         placeholder_class = unavailable_class("ClassName", ["library-name"])
         placeholder_class()
-
-    assert ex.match("ClassName requires the optional dependencies: 'library-name'.")
 
 
 def test_value_as_dict():
