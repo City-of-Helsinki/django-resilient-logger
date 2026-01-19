@@ -1,10 +1,10 @@
 import hashlib
 import json
 import logging
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from functools import cache
 from importlib import import_module
-from typing import Any, TypedDict, TypeVar
+from typing import Any, TypedDict, TypeVar, cast
 
 from django.conf import settings
 from django.core.serializers.json import DjangoJSONEncoder
@@ -23,15 +23,26 @@ class ResilientLoggerConfig(TypedDict):
     targets: list[dict[str, Any]]
 
 
+def _non_empty_string(input: str) -> bool:
+    return bool(input.strip())
+
+
+def _non_empty_list(input: list) -> bool:
+    return len(input) > 0
+
+
+_required_fields: tuple[tuple[str, type[Any], Callable[[Any], bool] | None], ...] = (
+    ("environment", str, _non_empty_string),
+    ("origin", str, _non_empty_string),
+    ("sources", list, _non_empty_list),
+    ("targets", list, _non_empty_list),
+)
+
 _default_config: ResilientLoggerConfig = {
-    "origin": "",
-    "environment": "",
     "batch_limit": 5000,
     "chunk_size": 500,
     "clear_sent_entries": True,
     "submit_unsent_entries": True,
-    "sources": [],
-    "targets": [],
 }
 
 BUILTIN_LOG_RECORD_ATTRS = {
@@ -97,25 +108,35 @@ def assert_required_extras(extra: dict[str, Any], required_fields: list[str]) ->
 
 @cache
 def get_resilient_logger_config() -> ResilientLoggerConfig:
-    config: ResilientLoggerConfig | None = getattr(settings, "RESILIENT_LOGGER", None)
+    raw_config: ResilientLoggerConfig | None = getattr(
+        settings, "RESILIENT_LOGGER", None
+    )
 
-    if not config:
+    if raw_config is None:
         raise RuntimeError("RESILIENT_LOGGER setting is missing")
 
-    if not isinstance(config, dict):
-        raise RuntimeError("RESILIENT_LOGGER is not proper dictionary")
+    if not isinstance(raw_config, dict):
+        raise RuntimeError("RESILIENT_LOGGER is not a proper dictionary")
 
-    if not isinstance(config.get("sources", None), list):
-        raise RuntimeError("RESILIENT_LOGGER['sources'] is not instance of list")
+    config = {**_default_config, **raw_config}
 
-    if not isinstance(config.get("targets", None), list):
-        raise RuntimeError("RESILIENT_LOGGER['targets'] is not instance of list")
+    for key, expected_type, validator in _required_fields:
+        if key not in config:
+            raise RuntimeError(f"RESILIENT_LOGGER is missing required key: '{key}'")
 
-    for key, default_value in _default_config.items():
-        # Add default values to jobs section if it skipped some.
-        config.setdefault(key, default_value)  # type: ignore
+        value = config[key]
 
-    return config
+        if not isinstance(value, expected_type):
+            actual_type = type(value).__name__
+            raise RuntimeError(
+                f"RESILIENT_LOGGER['{key}'] must be {expected_type.__name__}, "
+                f"got {actual_type}"
+            )
+
+        if validator and not validator(value):
+            raise RuntimeError(f"RESILIENT_LOGGER['{key}'] failed validation")
+
+    return cast(ResilientLoggerConfig, config)
 
 
 def content_hash(contents: dict[str, Any]) -> str:
