@@ -1,6 +1,6 @@
 import logging
 
-from django.core.management.base import BaseCommand, CommandError
+from django.core.management.base import BaseCommand
 
 from resilient_logger.resilient_logger import ResilientLogger
 from resilient_logger.utils import get_resilient_logger_config
@@ -19,7 +19,8 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         if not self.should_submit:
-            raise CommandError("submit_unsent_entries is disabled in config")
+            logger.info("submit_unsent_entries is disabled in config")
+            return
 
         logger.info("Begin submit_unsent_entries job.")
         result = self.resilient_logger.submit_unsent_entries()
