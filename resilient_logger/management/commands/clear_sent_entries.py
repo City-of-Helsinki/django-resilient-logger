@@ -1,6 +1,6 @@
 import logging
 
-from django.core.management.base import BaseCommand, CommandError
+from django.core.management.base import BaseCommand
 
 from resilient_logger.resilient_logger import ResilientLogger
 from resilient_logger.utils import get_resilient_logger_config
@@ -34,7 +34,8 @@ class Command(BaseCommand):
         days_to_keep = options.get("days_to_keep", 30)
 
         if not self.should_clear:
-            raise CommandError("clear_sent_entries is disabled in config")
+            logger.info("clear_sent_entries is disabled in config")
+            return
 
         logger.info("Begin clear_sent_entries job")
         result = self.resilient_logger.clear_sent_entries(days_to_keep)

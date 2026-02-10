@@ -41,8 +41,8 @@ _required_fields: tuple[tuple[str, type[Any], Callable[[Any], bool] | None], ...
 _default_config: ResilientLoggerConfig = {
     "batch_limit": 5000,
     "chunk_size": 500,
-    "clear_sent_entries": True,
-    "submit_unsent_entries": True,
+    "clear_sent_entries": False,
+    "submit_unsent_entries": False,
 }
 
 BUILTIN_LOG_RECORD_ATTRS = {

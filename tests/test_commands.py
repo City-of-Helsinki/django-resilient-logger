@@ -4,8 +4,13 @@ import pytest
 from django.core.management import call_command
 from django.test import override_settings
 
+from resilient_logger.models import ResilientLogEntry
 from resilient_logger.sources import ResilientLogSource
-from tests.testdata.testconfig import VALID_CONFIG_ALL_FIELDS
+from resilient_logger.utils import get_resilient_logger_config
+from tests.testdata.testconfig import (
+    VALID_CONFIG_ALL_FIELDS,
+    VALID_CONFIG_MISSING_OPTIONAL,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -23,6 +28,12 @@ def create_resilient_log_entries(count: int, mark_sent: bool):
 
         if mark_sent:
             entry.mark_sent()
+
+
+@pytest.fixture(autouse=True)
+def clear_config_cache():
+    get_resilient_logger_config.cache_clear()
+    yield
 
 
 @pytest.mark.django_db
@@ -63,3 +74,38 @@ def test_clear_sent_entries(caplog: pytest.LogCaptureFixture):
         result = extract_result(caplog.records[1])
         assert len(result) == 0
         caplog.clear()
+
+
+@pytest.mark.django_db
+@override_settings(RESILIENT_LOGGER=VALID_CONFIG_MISSING_OPTIONAL)
+def test_submit_unsent_entries_disabled(caplog: pytest.LogCaptureFixture):
+    logger_name = "resilient_logger.management.commands.submit_unsent_entries"
+    num_log_entries = 5
+
+    create_resilient_log_entries(num_log_entries, False)
+
+    with caplog.at_level(logging.INFO, logger=logger_name):
+        call_command("submit_unsent_entries")
+
+        assert "submit_unsent_entries is disabled in config" in caplog.text
+        assert "Begin submit_unsent_entries job" not in caplog.text
+
+        assert (
+            ResilientLogEntry.objects.filter(is_sent=False).count() == num_log_entries
+        )
+
+
+@pytest.mark.django_db
+@override_settings(RESILIENT_LOGGER=VALID_CONFIG_MISSING_OPTIONAL)
+def test_clear_sent_entries_disabled(caplog: pytest.LogCaptureFixture):
+    logger_name = "resilient_logger.management.commands.clear_sent_entries"
+    num_log_entries = 5
+
+    create_resilient_log_entries(num_log_entries, True)
+
+    with caplog.at_level(logging.INFO, logger=logger_name):
+        call_command("clear_sent_entries", days_to_keep=0)
+
+        assert "clear_sent_entries is disabled in config" in caplog.text
+        assert "Begin clear_sent_entries job" not in caplog.text
+        assert ResilientLogEntry.objects.filter(is_sent=True).count() == num_log_entries
