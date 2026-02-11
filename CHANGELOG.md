@@ -1,6 +1,18 @@
 <!-- DOCTOC SKIP -->
 # Changelog
 
+## [2.0.0](https://github.com/City-of-Helsinki/django-resilient-logger/compare/v1.2.0...v2.0.0) (2026-02-11)
+
+
+### ⚠ BREAKING CHANGES
+
+* Tasks that previously ran by default are now disabled. If some project relied on default values, those configurations must be updated to enable the cron tasks explicitly.
+
+### Features
+
+* Add better config validations ([a6afd1f](https://github.com/City-of-Helsinki/django-resilient-logger/commit/a6afd1fe8a3667149bc33d54b42fd4f3ac36edd4))
+* Change default task enabled states ([98ceb4f](https://github.com/City-of-Helsinki/django-resilient-logger/commit/98ceb4fac7c5bd7896f95a5d561fd084d4205e51))
+
 ## [1.2.0](https://github.com/City-of-Helsinki/django-resilient-logger/compare/v1.1.1...v1.2.0) (2025-12-16)
 
 
