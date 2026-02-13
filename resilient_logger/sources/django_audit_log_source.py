@@ -130,8 +130,8 @@ class DjangoAuditLogSource(AbstractLogSource):
                 substrings.append(f"{field:s}{colon:s}{value[0]}{arrow:s}{value[1]}")
             elif isinstance(value, dict) and value.get("type") == "m2m":
                 # handle m2m change
-                substrings.append(
-                    f"{field}{colon}{value['operation']} {sorted(value['objects'])}"
-                )
+                operation = value.get("operation", "unknown")
+                objects = value.get("objects", [])
+                substrings.append(f"{field}{colon}{operation} {sorted(objects)}")
 
         return separator.join(substrings)
