@@ -88,6 +88,28 @@ def test_clear_sent_entries():
     assert len(cleaned_ids) == 0
 
 
+@pytest.mark.django_db
+@override_settings(RESILIENT_LOGGER=VALID_CONFIG_ALL_FIELDS)
+def test_changes_str_fallback():
+    [object] = create_objects(1)
+    entry = LogEntry.objects.log_create(
+        object,
+        force_log=True,
+        action=LogEntry.Action.UPDATE,
+        changes={
+            "internal_key": [
+                None,
+                "NewValue",
+            ]
+        },
+    )
+
+    wrapped = DjangoAuditLogSource(entry)
+    wrapped.get_document()
+
+    assert True
+
+
 def test_optional_django_audit_log():
     with patch.dict(
         "sys.modules", {"resilient_logger.sources.django_audit_log_source": None}
