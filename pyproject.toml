@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "django-resilient-logger"
-version = "2.0.0"
+version = "2.1.0"
 authors = [{ name = "City of Helsinki", email = "dev@hel.fi" }]
 description = "A module that provides django-specific resilient logger module."
 readme = "README.md"

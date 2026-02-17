@@ -1,6 +1,18 @@
 <!-- DOCTOC SKIP -->
 # Changelog
 
+## [2.1.0](https://github.com/City-of-Helsinki/django-resilient-logger/compare/v2.0.0...v2.1.0) (2026-02-17)
+
+
+### Features
+
+* Fallback changes_str for django-auditlog ([f175ab4](https://github.com/City-of-Helsinki/django-resilient-logger/commit/f175ab45a540b9452dfc5fa1caacef99a808a1c0))
+
+
+### Bug Fixes
+
+* Access operation and objects with getters ([5aef92e](https://github.com/City-of-Helsinki/django-resilient-logger/commit/5aef92e5c7a01a8556047c5ba1e0f64c13fa1897))
+
 ## [2.0.0](https://github.com/City-of-Helsinki/django-resilient-logger/compare/v1.2.0...v2.0.0) (2026-02-11)
 
 
