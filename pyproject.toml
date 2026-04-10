@@ -72,6 +72,11 @@ lint = [
 ]
 manage = "tests/manage.py {args}"
 
+[tool.hatch.envs.hatch-uv]
+dependencies = [
+  "uv>=0.11.1",
+]
+
 [tool.hatch.envs.hatch-test]
 default-args = ["tests"]
 features = ["all"]
@@ -142,3 +147,6 @@ plugins = ["mypy_django_plugin.main"]
 
 [tool.django-stubs]
 django_settings_module = "tests.settings"
+
+[tool.uv]
+exclude-newer = "14 days"
