@@ -39,11 +39,8 @@ dependencies = ["django>=5.2", "elasticsearch8"]
 test = [
     "pytest",
     "pytest-django",
-    "coverage-enable-subprocess",
     "coverage[toml]",
     "pytest-randomly",
-    "pytest-rerunfailures",
-    "pytest-xdist[psutil]",
 ]
 auditlog = ["django-auditlog"]
 all = ["django-resilient-logger[auditlog]", "django-resilient-logger[test]"]
