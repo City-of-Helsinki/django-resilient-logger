@@ -1,6 +1,13 @@
 <!-- DOCTOC SKIP -->
 # Changelog
 
+## [2.1.1](https://github.com/City-of-Helsinki/django-resilient-logger/compare/v2.1.0...v2.1.1) (2026-04-13)
+
+
+### Dependencies
+
+* Drop support for django 4.2, 5.1, add 6.0 support ([a83d568](https://github.com/City-of-Helsinki/django-resilient-logger/commit/a83d568521964d4aa0ff151d585ae2cee5dc3b22))
+
 ## [2.1.0](https://github.com/City-of-Helsinki/django-resilient-logger/compare/v2.0.0...v2.1.0) (2026-02-17)
 
 
