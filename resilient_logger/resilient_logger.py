@@ -18,7 +18,7 @@ class ResilientLogger:
         self,
         batch_limit: int,
         chunk_size: int,
-        log_sources: list[type[AbstractLogSource]],
+        log_sources: list[AbstractLogSource],
         log_targets: list[AbstractLogTarget],
     ) -> None:
         self._batch_limit = batch_limit
@@ -34,7 +34,7 @@ class ResilientLogger:
         sources = settings.get("sources", []).copy()
         targets = settings.get("targets", []).copy()
 
-        list_sources: list[type[AbstractLogSource]] = []
+        list_sources: list[AbstractLogSource] = []
         list_targets: list[AbstractLogTarget] = []
 
         for source in sources:
@@ -43,7 +43,7 @@ class ResilientLogger:
             source_class = dynamic_class(
                 cast(type[AbstractLogSource], AbstractLogSource), source_class_name
             )
-            list_sources.append(source_class)
+            list_sources.append(source_class(**source_args))
 
         for target in targets:
             target_args = target.copy()
@@ -91,7 +91,7 @@ class ResilientLogger:
 
         return deleted_ids
 
-    def _submit(self, source: AbstractLogSource) -> bool:
+    def _submit(self, source: AbstractLogSource.Entry) -> bool:
         for log_target in self._log_targets:
             submitted = False
 
@@ -105,7 +105,7 @@ class ResilientLogger:
 
         return True
 
-    def _get_unsent_entries(self) -> Iterator[AbstractLogSource]:
+    def _get_unsent_entries(self) -> Iterator[AbstractLogSource.Entry]:
         """
         Queries and returns iterator for all unsent log entries.
         """

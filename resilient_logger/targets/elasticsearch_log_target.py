@@ -43,8 +43,6 @@ class ElasticsearchLogTarget(AbstractLogTarget):
         es_scheme: str | None = "https",
         required: bool = True,
     ) -> None:
-        super().__init__(required)
-
         if not es_url:
             scheme = es_scheme
             host = es_host
@@ -63,8 +61,12 @@ class ElasticsearchLogTarget(AbstractLogTarget):
             [{"host": host, "port": port, "scheme": scheme}],
             basic_auth=(es_username, es_password),
         )
+        self._required = required
 
-    def submit(self, entry: AbstractLogSource) -> bool:
+    def is_required(self):
+        return self._required
+
+    def submit(self, entry: AbstractLogSource.Entry) -> bool:
         document = entry.get_document()
         hash = content_hash(document)
 

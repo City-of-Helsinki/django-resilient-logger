@@ -10,6 +10,11 @@ from tests.models import DummyModel
 from tests.testdata.testconfig import VALID_CONFIG_ALL_FIELDS
 
 
+@pytest.fixture
+def log_source():
+    return DjangoAuditLogSource()
+
+
 def create_objects(count: int) -> list[DummyModel]:
     results: list[DummyModel] = []
 
@@ -21,7 +26,7 @@ def create_objects(count: int) -> list[DummyModel]:
 
 def object_to_auditlog_source(model: DummyModel) -> DjangoAuditLogSource:
     entry = LogEntry.objects.get(object_pk=model.id)
-    return DjangoAuditLogSource(entry)
+    return DjangoAuditLogSource.Entry(entry)
 
 
 @pytest.mark.django_db
@@ -37,7 +42,7 @@ def test_mark_sent():
 
 @pytest.mark.django_db
 @override_settings(RESILIENT_LOGGER=VALID_CONFIG_ALL_FIELDS)
-def test_get_unsent_entries():
+def test_get_unsent_entries(log_source):
     num_objects = 3
     objects = create_objects(num_objects)
 
@@ -48,7 +53,7 @@ def test_get_unsent_entries():
         assert not log_entry.additional_data
 
     actual_entries = [object_to_auditlog_source(obj) for obj in objects]
-    unsent_entries = list(DjangoAuditLogSource.get_unsent_entries(500))
+    unsent_entries = list(log_source.get_unsent_entries(500))
 
     assert len(actual_entries) == len(unsent_entries)
 
@@ -57,7 +62,7 @@ def test_get_unsent_entries():
         assert actual_entries[i].get_document() == unsent_entries[i].get_document()
         actual_entries[i].mark_sent()
 
-    unsent_entries = list(DjangoAuditLogSource.get_unsent_entries(500))
+    unsent_entries = list(log_source.get_unsent_entries(500))
     assert len(unsent_entries) == 0
 
     for log_entry in all_log_entries:
@@ -67,7 +72,7 @@ def test_get_unsent_entries():
 
 @pytest.mark.django_db
 @override_settings(RESILIENT_LOGGER=VALID_CONFIG_ALL_FIELDS)
-def test_clear_sent_entries():
+def test_clear_sent_entries(log_source):
     num_objects = 3
     objects = create_objects(num_objects)
     actual_entries = [object_to_auditlog_source(obj) for obj in objects]
@@ -76,7 +81,7 @@ def test_clear_sent_entries():
         actual_entry.mark_sent()
 
     actual_ids = [str(entry.get_id()) for entry in actual_entries]
-    cleaned_ids = DjangoAuditLogSource.clear_sent_entries(0)
+    cleaned_ids = log_source.clear_sent_entries(0)
 
     assert len(actual_ids) == num_objects
     assert len(cleaned_ids) == num_objects
@@ -84,7 +89,7 @@ def test_clear_sent_entries():
     for cleaned_id in cleaned_ids:
         assert cleaned_id in actual_ids
 
-    cleaned_ids = DjangoAuditLogSource.clear_sent_entries(0)
+    cleaned_ids = log_source.clear_sent_entries(0)
     assert len(cleaned_ids) == 0
 
 
@@ -104,7 +109,7 @@ def test_changes_str_fallback():
         },
     )
 
-    wrapped = DjangoAuditLogSource(entry)
+    wrapped = DjangoAuditLogSource.Entry(entry)
     wrapped.get_document()
 
     assert True

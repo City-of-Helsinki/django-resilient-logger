@@ -1,7 +1,6 @@
-from abc import ABC, abstractmethod
 from collections.abc import Iterator
 from datetime import datetime
-from typing import TypedDict, TypeVar
+from typing import Protocol, TypedDict, runtime_checkable
 
 
 class AuditLogEvent(TypedDict):
@@ -24,47 +23,46 @@ AuditLogDocument = TypedDict(
     },
 )
 
-TAbstractLogSource = TypeVar("TAbstractLogSource", bound="AbstractLogSource")
 
-
-class AbstractLogSource(ABC):
+@runtime_checkable
+class AbstractLogSource(Protocol):
     """
     Abstract base class (interface) that defines the method signatures.
     This is required because Django will not work if we import something
     that relies on Models too early.
     """
 
-    @abstractmethod
-    def get_id(self) -> str | int:
-        raise NotImplementedError()
+    @runtime_checkable
+    class Entry(Protocol):
+        """Represents a single log entry contract."""
 
-    @abstractmethod
-    def get_document(self) -> AuditLogDocument:
-        raise NotImplementedError()
+        def get_id(self) -> str | int:
+            """Retrieve the unique identifier for the log entry."""
+            ...
 
-    @abstractmethod
-    def is_sent(self) -> bool:
-        raise NotImplementedError()
+        def get_document(self) -> AuditLogDocument:
+            """Serialize the entry into a document format."""
+            ...
 
-    @abstractmethod
-    def mark_sent(self) -> None:
-        raise NotImplementedError()
+        def is_sent(self) -> bool:
+            """Check if the entry has already been processed."""
+            ...
 
-    @classmethod
-    @abstractmethod
+        def mark_sent(self) -> None:
+            """Update the entry state to 'sent' in the persistent store."""
+            ...
+
     def get_unsent_entries(
-        cls: type[TAbstractLogSource], chunk_size: int
-    ) -> Iterator[TAbstractLogSource]:
+        self, chunk_size: int
+    ) -> Iterator["AbstractLogSource.Entry"]:
         """
         Queries and returns iterator for unsent log entries.
         """
-        raise NotImplementedError()
+        ...
 
-    @classmethod
-    @abstractmethod
-    def clear_sent_entries(cls, days_to_keep: int = 30) -> list[str]:
+    def clear_sent_entries(self, days_to_keep: int = 30) -> list[str]:
         """
         Clears the old entries that are older than days_to_keep days
         and returns the list of the cleared object ids.
         """
-        raise NotImplementedError()
+        ...

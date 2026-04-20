@@ -4,16 +4,10 @@ from resilient_logger.sources import AbstractLogSource
 
 
 class AbstractLogTarget(ABC):
-    def __init__(self, required: bool = True):
-        """
-        Base class for logging targets.
-        Required means if we can proceed even if the target fails.
-        """
-        self.required = required
-
+    @abstractmethod
     def is_required(self) -> bool:
-        return self.required
+        raise NotImplementedError()
 
     @abstractmethod
-    def submit(self, entry: AbstractLogSource) -> bool:
+    def submit(self, entry: AbstractLogSource.Entry) -> bool:
         raise NotImplementedError()

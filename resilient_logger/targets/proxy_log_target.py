@@ -10,8 +10,11 @@ class ProxyLogTarget(AbstractLogTarget):
     """
 
     def __init__(self, name: str = __name__, required: bool = False) -> None:
-        super().__init__(required)
+        self._required = required
         self._logger = logging.getLogger(name)
+
+    def is_required(self):
+        return self._required
 
     def submit(self, entry: AbstractLogSource) -> bool:
         document = entry.get_document()
