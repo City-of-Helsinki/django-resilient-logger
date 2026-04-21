@@ -8,8 +8,7 @@ from django.utils import timezone
 
 from resilient_logger.models import ResilientLogEntry
 from resilient_logger.sources import AbstractLogSource
-from resilient_logger.sources.abstract_log_source import AuditLogDocument
-from resilient_logger.utils import get_resilient_logger_config, value_as_dict
+from resilient_logger.sources.resilient_log_source_entry import ResilientLogSourceEntry
 
 TResilientLogSource = TypeVar("TResilientLogSource", bound="ResilientLogSource")
 
@@ -32,9 +31,6 @@ class StructuredResilientLogEntryData:
 
 
 class ResilientLogSource(AbstractLogSource):
-    def __init__(self, log: ResilientLogEntry):
-        self.log = log
-
     @classmethod
     def create(
         cls: type[TResilientLogSource], *, level: int, message: Any, context: dict
@@ -45,7 +41,7 @@ class ResilientLogSource(AbstractLogSource):
             context=context,
         )
 
-        return cls(entry)
+        return ResilientLogSourceEntry(entry)
 
     @classmethod
     def bulk_create(
@@ -56,7 +52,7 @@ class ResilientLogSource(AbstractLogSource):
             for obj in objs
         )
 
-        return [cls(entry) for entry in entries]
+        return [ResilientLogSourceEntry(entry) for entry in entries]
 
     @classmethod
     def create_structured(
@@ -101,51 +97,10 @@ class ResilientLogSource(AbstractLogSource):
 
         return cls.bulk_create(objs=prepared_objs)
 
-    def get_id(self) -> str | int:
-        return self.log.id
-
-    def get_document(self) -> AuditLogDocument:
-        config = get_resilient_logger_config()
-        context = (self.log.context or {}).copy()
-        actor = context.pop("actor", "unknown")
-        operation = context.pop("operation", "MANUAL")
-        target = context.pop("target", "unknown")
-        iso_date = (
-            self.log.created_at.astimezone(datetime.timezone.utc)
-            .isoformat(timespec="milliseconds")
-            .replace("+00:00", "Z")
-        )
-
-        extra = {
-            **context,
-            "source_pk": self.get_id(),
-        }
-
-        return {
-            "@timestamp": iso_date,
-            "audit_event": {
-                "actor": value_as_dict(actor),
-                "date_time": iso_date,
-                "operation": operation,
-                "origin": config["origin"],
-                "target": value_as_dict(target),
-                "environment": config["environment"],
-                "message": self.log.message,
-                "level": self.log.level,
-                "extra": extra,
-            },
-        }
-
-    def is_sent(self) -> bool:
-        return self.log.is_sent
-
-    def mark_sent(self) -> None:
-        self.log.is_sent = True
-        self.log.save(update_fields=["is_sent"])
-
-    @classmethod
     @transaction.atomic
-    def get_unsent_entries(cls, chunk_size: int) -> Iterator["ResilientLogSource"]:
+    def get_unsent_entries(
+        self, chunk_size: int
+    ) -> Iterator["ResilientLogSourceEntry"]:
         entries = (
             ResilientLogEntry.objects.filter(is_sent=False)
             .order_by("created_at")
@@ -153,11 +108,10 @@ class ResilientLogSource(AbstractLogSource):
         )
 
         for entry in entries:
-            yield cls(entry)
+            yield ResilientLogSourceEntry(entry)
 
-    @classmethod
     @transaction.atomic
-    def clear_sent_entries(cls, days_to_keep: int = 30) -> list[str]:
+    def clear_sent_entries(self, days_to_keep: int = 30) -> list[str]:
         entries = ResilientLogEntry.objects.filter(
             is_sent=True,
             created_at__lte=(timezone.now() - datetime.timedelta(days=days_to_keep)),
