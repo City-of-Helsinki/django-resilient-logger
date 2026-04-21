@@ -13,7 +13,7 @@ class ProxyLogTarget(AbstractLogTarget):
         self._required = required
         self._logger = logging.getLogger(name)
 
-    def is_required(self):
+    def is_required(self) -> bool:
         return self._required
 
     def submit(self, entry: AbstractLogSource) -> bool:

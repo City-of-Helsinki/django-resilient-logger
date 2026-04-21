@@ -5,6 +5,7 @@ from typing import TypeVar, cast
 from django.db import transaction
 
 from resilient_logger.sources import AbstractLogSource
+from resilient_logger.sources.abstract_log_source_entry import AbstractLogSourceEntry
 from resilient_logger.targets import AbstractLogTarget
 from resilient_logger.utils import dynamic_class, get_resilient_logger_config
 
@@ -91,7 +92,7 @@ class ResilientLogger:
 
         return deleted_ids
 
-    def _submit(self, source: AbstractLogSource.Entry) -> bool:
+    def _submit(self, source: AbstractLogSourceEntry) -> bool:
         for log_target in self._log_targets:
             submitted = False
 
@@ -105,7 +106,7 @@ class ResilientLogger:
 
         return True
 
-    def _get_unsent_entries(self) -> Iterator[AbstractLogSource.Entry]:
+    def _get_unsent_entries(self) -> Iterator[AbstractLogSourceEntry]:
         """
         Queries and returns iterator for all unsent log entries.
         """

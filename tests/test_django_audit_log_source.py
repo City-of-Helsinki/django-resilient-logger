@@ -6,6 +6,9 @@ from auditlog.models import LogEntry
 from django.test import override_settings
 
 from resilient_logger.sources import DjangoAuditLogSource
+from resilient_logger.sources.django_audit_log_source_entry import (
+    DjangoAuditLogSourceEntry,
+)
 from tests.models import DummyModel
 from tests.testdata.testconfig import VALID_CONFIG_ALL_FIELDS
 
@@ -26,7 +29,7 @@ def create_objects(count: int) -> list[DummyModel]:
 
 def object_to_auditlog_source(model: DummyModel) -> DjangoAuditLogSource:
     entry = LogEntry.objects.get(object_pk=model.id)
-    return DjangoAuditLogSource.Entry(entry)
+    return DjangoAuditLogSourceEntry(entry)
 
 
 @pytest.mark.django_db
@@ -109,7 +112,7 @@ def test_changes_str_fallback():
         },
     )
 
-    wrapped = DjangoAuditLogSource.Entry(entry)
+    wrapped = DjangoAuditLogSourceEntry(entry)
     wrapped.get_document()
 
     assert True

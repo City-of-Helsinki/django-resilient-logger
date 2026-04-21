@@ -3,7 +3,7 @@ from urllib.parse import urlparse
 
 from elasticsearch8 import ConflictError, Elasticsearch
 
-from resilient_logger.sources import AbstractLogSource
+from resilient_logger.sources.abstract_log_source_entry import AbstractLogSourceEntry
 from resilient_logger.targets import AbstractLogTarget
 from resilient_logger.utils import content_hash
 
@@ -63,10 +63,10 @@ class ElasticsearchLogTarget(AbstractLogTarget):
         )
         self._required = required
 
-    def is_required(self):
+    def is_required(self) -> bool:
         return self._required
 
-    def submit(self, entry: AbstractLogSource.Entry) -> bool:
+    def submit(self, entry: AbstractLogSourceEntry) -> bool:
         document = entry.get_document()
         hash = content_hash(document)
 
