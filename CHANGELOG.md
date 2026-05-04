@@ -1,6 +1,13 @@
 <!-- DOCTOC SKIP -->
 # Changelog
 
+## [2.2.0](https://github.com/City-of-Helsinki/django-resilient-logger/compare/v2.1.1...v2.2.0) (2026-05-04)
+
+
+### Features
+
+* Split log source into repository and entry ([#43](https://github.com/City-of-Helsinki/django-resilient-logger/issues/43)) ([e4d8a67](https://github.com/City-of-Helsinki/django-resilient-logger/commit/e4d8a67f5c96e904b517332cb1cccb1e98768735))
+
 ## [2.1.1](https://github.com/City-of-Helsinki/django-resilient-logger/compare/v2.1.0...v2.1.1) (2026-04-13)
 
 
