@@ -2,14 +2,16 @@ import importlib
 from unittest.mock import patch
 
 import pytest
+from auditlog.context import set_actor
 from auditlog.models import LogEntry
+from django.contrib.auth.models import User
 from django.test import override_settings
 
 from resilient_logger.sources import DjangoAuditLogSource
 from resilient_logger.sources.django_audit_log_source_entry import (
     DjangoAuditLogSourceEntry,
 )
-from tests.models import DummyModel
+from tests.models import DummyModel, M2MChild, M2MParent, M2OChild, M2OParent
 from tests.testdata.testconfig import VALID_CONFIG_ALL_FIELDS
 
 
@@ -27,8 +29,10 @@ def create_objects(count: int) -> list[DummyModel]:
     return results
 
 
-def object_to_auditlog_source(model: DummyModel) -> DjangoAuditLogSource:
-    entry = LogEntry.objects.get(object_pk=model.id)
+def object_to_auditlog_source(
+    obj: DummyModel | M2MParent | M2OChild,
+) -> DjangoAuditLogSourceEntry:
+    entry = LogEntry.objects.get_for_object(obj).order_by("pk").last()
     return DjangoAuditLogSourceEntry(entry)
 
 
@@ -116,6 +120,64 @@ def test_changes_str_fallback():
     wrapped.get_document()
 
     assert True
+
+
+@pytest.mark.django_db
+@override_settings(RESILIENT_LOGGER=VALID_CONFIG_ALL_FIELDS)
+def test_m2m():
+    parent = M2MParent.objects.create(message="parent")
+    children: list[M2MChild] = []
+
+    for i in range(3):
+        children.append(M2MChild.objects.create(message=str(i)))
+
+    parent.children.set(children)
+    entry = object_to_auditlog_source(parent)
+    event = entry.get_document().get("audit_event")
+
+    children_strings = sorted([f"'{str(obj)}'" for obj in children])
+    child_list_str = ", ".join(children_strings)
+    expected = f"children: add [{child_list_str}]"
+
+    assert expected == event.get("message")
+
+
+@pytest.mark.django_db
+@override_settings(RESILIENT_LOGGER=VALID_CONFIG_ALL_FIELDS)
+def test_m2o():
+    arrow = "\u2192"
+    parent1 = M2OParent.objects.create(message="parent")
+    children = M2OChild.objects.create(message="child", parent=parent1)
+
+    entry1 = object_to_auditlog_source(children)
+    event1 = entry1.get_document().get("audit_event")
+    expected1 = f"parent: None {arrow} {parent1.id}"
+    assert expected1 in event1.get("message")
+
+    parent2 = M2OParent.objects.create(message="parent")
+    children.parent = parent2
+    children.save()
+
+    entry2 = object_to_auditlog_source(children)
+    event2 = entry2.get_document().get("audit_event")
+    expected2 = f"parent: {parent1.id} {arrow} {parent2.id}"
+    assert expected2 in event2.get("message")
+
+
+@pytest.mark.django_db
+@override_settings(RESILIENT_LOGGER=VALID_CONFIG_ALL_FIELDS)
+def test_actor():
+    user = User.objects.create(
+        email="admin@localhost", first_name="Test", last_name="User"
+    )
+
+    with set_actor(user):
+        [object] = create_objects(1)
+
+    entry = object_to_auditlog_source(object)
+    event = entry.get_document().get("audit_event")
+
+    assert event.get("actor") == {"email": "admin@localhost", "name": "Test User"}
 
 
 def test_optional_django_audit_log():

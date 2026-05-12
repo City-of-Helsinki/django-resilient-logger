@@ -75,7 +75,7 @@ class DjangoAuditLogSourceEntry(AbstractLogSourceEntry):
     def _parse_changes(cls, log: LogEntry) -> str:
         try:
             return log.changes_str
-        except TypeError:
+        except (TypeError, KeyError):
             return cls._changes_str_fallback(log.changes_dict)
 
     @classmethod
