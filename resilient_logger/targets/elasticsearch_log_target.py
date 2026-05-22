@@ -1,7 +1,7 @@
 import logging
 from urllib.parse import urlparse
 
-from elasticsearch8 import ConflictError, Elasticsearch
+from elasticsearch8 import ApiError, ConflictError, Elasticsearch
 
 from resilient_logger.sources.abstract_log_source_entry import AbstractLogSourceEntry
 from resilient_logger.targets import AbstractLogTarget
@@ -41,6 +41,7 @@ class ElasticsearchLogTarget(AbstractLogTarget):
         es_host: str | None = None,
         es_port: int | None = 9200,
         es_scheme: str | None = "https",
+        es_compress: bool = False,
         required: bool = True,
     ) -> None:
         if not es_url:
@@ -60,6 +61,7 @@ class ElasticsearchLogTarget(AbstractLogTarget):
         self._client = Elasticsearch(
             [{"host": host, "port": port, "scheme": scheme}],
             basic_auth=(es_username, es_password),
+            http_compress=es_compress,
         )
         self._required = required
 
@@ -96,10 +98,27 @@ class ElasticsearchLogTarget(AbstractLogTarget):
             )
 
             return True
-        except Exception:
-            """
-            Unknown exception, log it and keep going to avoid transaction rollbacks.
-            """
-            logger.exception(f"Entry with key {hash} failed.")
+        except ApiError as e:
+            if e.status_code == 413:
+                """
+                Payload size is too big, there is not much we can do.
+                Log the details for developer to find the row and handle
+                it manually.
+                """
+                logger.error(
+                    f"Payload is too big for {hash}. Source PK: {entry.get_id()}"
+                )
+                return False
 
+            return self._handle_exception(hash, entry)
+        except Exception:
+            return self._handle_exception(hash, entry)
+
+        return False
+
+    def _handle_exception(self, hash: str, entry: AbstractLogSourceEntry) -> bool:
+        """
+        Unknown exception, log it and keep going to avoid transaction rollbacks.
+        """
+        logger.exception(f"Entry with key {hash} failed. Source PK: {entry.get_id()}")
         return False
