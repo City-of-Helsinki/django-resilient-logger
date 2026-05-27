@@ -1,6 +1,13 @@
 <!-- DOCTOC SKIP -->
 # Changelog
 
+## [2.3.0](https://github.com/City-of-Helsinki/django-resilient-logger/compare/v2.2.0...v2.3.0) (2026-05-27)
+
+
+### Features
+
+* Add too big payload handling ([#46](https://github.com/City-of-Helsinki/django-resilient-logger/issues/46)) ([21a55d8](https://github.com/City-of-Helsinki/django-resilient-logger/commit/21a55d899252bfb2557c5fd967e41d2c217764e2))
+
 ## [2.2.0](https://github.com/City-of-Helsinki/django-resilient-logger/compare/v2.1.1...v2.2.0) (2026-05-19)
 
 
