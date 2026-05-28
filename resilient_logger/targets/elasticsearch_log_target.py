@@ -26,9 +26,12 @@ class ElasticsearchLogTarget(AbstractLogTarget):
     If `es_url` is provided but lacks a scheme or port, the values from `es_scheme` and
     `es_port` will be used.
 
+    If `es_compress` is enabled, HTTP compression flag will be passed to Elastic client.
+
     Defaults:
     - `es_scheme`: https
     - `es_port`: 9200
+    - `es_compress`: False
     """
 
     def __init__(
