@@ -70,12 +70,12 @@ class ElasticsearchLogTarget(AbstractLogTarget):
 
     def submit(self, entry: AbstractLogSourceEntry) -> bool:
         document = entry.get_document()
-        hash = content_hash(document)
+        doc_id = content_hash(document)
 
         try:
             response = self._client.index(
                 index=self._index,
-                id=hash,
+                id=doc_id,
                 document=document,
                 op_type="create",
             )
@@ -93,7 +93,7 @@ class ElasticsearchLogTarget(AbstractLogTarget):
             sent to the Elasticsearch.
             """
             logger.warning(
-                f"""Skipping the document with key {hash}, it's already submitted.""",
+                f"""Skipping the document with key {doc_id}, it's already submitted.""",
                 extra=document,
             )
 
@@ -106,19 +106,19 @@ class ElasticsearchLogTarget(AbstractLogTarget):
                 it manually.
                 """
                 logger.error(
-                    f"Payload is too big for {hash}. Source PK: {entry.get_id()}"
+                    f"Payload is too big for {doc_id}. Source PK: {entry.get_id()}"
                 )
                 return False
 
-            return self._handle_exception(hash, entry)
+            return self._handle_exception(doc_id, entry)
         except Exception:
-            return self._handle_exception(hash, entry)
+            return self._handle_exception(doc_id, entry)
 
         return False
 
-    def _handle_exception(self, hash: str, entry: AbstractLogSourceEntry) -> bool:
+    def _handle_exception(self, doc_id: str, entry: AbstractLogSourceEntry) -> bool:
         """
         Unknown exception, log it and keep going to avoid transaction rollbacks.
         """
-        logger.exception(f"Entry with key {hash} failed. Source PK: {entry.get_id()}")
+        logger.exception(f"Entry with key {doc_id} failed. Source PK: {entry.get_id()}")
         return False
