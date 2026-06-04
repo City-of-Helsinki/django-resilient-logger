@@ -68,6 +68,7 @@ RESILIENT_LOGGER = {
         "es_username": env("AUDIT_LOG_ES_USERNAME"),
         "es_password": env("AUDIT_LOG_ES_PASSWORD"),
         "es_index": env("AUDIT_LOG_ES_INDEX"),
+        "es_compress": False,
         "required": True
     }],
     "batch_limit": 5000,
