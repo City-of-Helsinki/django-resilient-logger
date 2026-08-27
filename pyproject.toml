@@ -42,8 +42,9 @@ test = [
     "coverage[toml]",
     "pytest-randomly",
 ]
+logger_extra = ["django-logger-extra"]
 auditlog = ["django-auditlog"]
-all = ["django-resilient-logger[auditlog]", "django-resilient-logger[test]"]
+all = ["django-resilient-logger[auditlog]", "django-resilient-logger[logger_extra]", "django-resilient-logger[test]"]
 
 [project.urls]
 Homepage = "https://github.com/City-of-Helsinki/django-resilient-logger"
