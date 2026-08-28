@@ -12,10 +12,7 @@ from resilient_logger.sources.resilient_log_source_entry import ResilientLogSour
 
 try:
     from logger_extra.logger_context import get_logger_context
-
-    HAS_LOGGER_EXTRA = True
 except ImportError:
-    HAS_LOGGER_EXTRA = False
 
     def get_logger_context() -> dict:
         return {}
