@@ -134,10 +134,7 @@ def test_m2m():
     parent.children.set(children)
     entry = object_to_auditlog_source(parent)
     event = entry.get_document().get("audit_event")
-
-    children_strings = sorted([f"'{str(obj)}'" for obj in children])
-    child_list_str = ", ".join(children_strings)
-    expected = f"children: add [{child_list_str}]"
+    expected = f"Updated {str(parent)}"
 
     assert expected == event.get("message")
 
@@ -145,13 +142,12 @@ def test_m2m():
 @pytest.mark.django_db
 @override_settings(RESILIENT_LOGGER=VALID_CONFIG_ALL_FIELDS)
 def test_m2o():
-    arrow = "\u2192"
     parent1 = M2OParent.objects.create(message="parent")
     children = M2OChild.objects.create(message="child", parent=parent1)
 
     entry1 = object_to_auditlog_source(children)
     event1 = entry1.get_document().get("audit_event")
-    expected1 = f"parent: None {arrow} {parent1.id}"
+    expected1 = f"Created {children}"
     assert expected1 in event1.get("message")
 
     parent2 = M2OParent.objects.create(message="parent")
@@ -160,7 +156,7 @@ def test_m2o():
 
     entry2 = object_to_auditlog_source(children)
     event2 = entry2.get_document().get("audit_event")
-    expected2 = f"parent: {parent1.id} {arrow} {parent2.id}"
+    expected2 = f"Updated {children}"
     assert expected2 in event2.get("message")
 
 

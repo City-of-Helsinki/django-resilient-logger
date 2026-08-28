@@ -43,7 +43,7 @@ class DjangoAuditLogSourceEntry(AbstractLogSourceEntry):
                     "value": self.log.object_repr,
                 },
                 "environment": config["environment"],
-                "message": self._parse_changes(self.log),
+                "message": str(self.log),
                 "extra": extra,
             },
         }
@@ -70,32 +70,3 @@ class DjangoAuditLogSourceEntry(AbstractLogSourceEntry):
             return {"name": raw_actor.get_full_name(), "email": raw_actor.email}
 
         return {"name": None, "email": None}
-
-    @classmethod
-    def _parse_changes(cls, log: LogEntry) -> str:
-        try:
-            return log.changes_str
-        except (TypeError, KeyError):
-            return cls._changes_str_fallback(log.changes_dict)
-
-    @classmethod
-    def _changes_str_fallback(
-        cls, changes_dict: dict, colon=": ", arrow=" \u2192 ", separator="; "
-    ) -> str:
-        """
-        Reconstruction of django-auditlog's LogEntry.changes_str that does not
-        enforce old and new value formats as string.
-        """
-        substrings = []
-
-        for field, value in sorted(changes_dict.items()):
-            if isinstance(value, (list, tuple)) and len(value) == 2:
-                # handle regular field change
-                substrings.append(f"{field:s}{colon:s}{value[0]}{arrow:s}{value[1]}")
-            elif isinstance(value, dict) and value.get("type") == "m2m":
-                # handle m2m change
-                operation = value.get("operation", "unknown")
-                objects = value.get("objects", [])
-                substrings.append(f"{field}{colon}{operation} {sorted(objects)}")
-
-        return separator.join(substrings)
