@@ -1,4 +1,5 @@
 import pytest
+from django.test import override_settings
 from logger_extra.logger_context import logger_context
 
 from resilient_logger.models import ResilientLogEntry
@@ -8,9 +9,11 @@ from resilient_logger.sources.resilient_log_source import (
     StructuredResilientLogEntryData,
 )
 from resilient_logger.sources.resilient_log_source_entry import ResilientLogSourceEntry
+from tests.testdata.testconfig import VALID_CONFIG_ALL_FIELDS
 
 
 @pytest.mark.django_db
+@override_settings(RESILIENT_LOGGER=VALID_CONFIG_ALL_FIELDS)
 def test_bulk_create_structured_injects_logger_context(
     django_assert_max_num_queries,
 ):
@@ -41,6 +44,7 @@ def test_bulk_create_structured_injects_logger_context(
 
 
 @pytest.mark.django_db
+@override_settings(RESILIENT_LOGGER=VALID_CONFIG_ALL_FIELDS)
 def test_bulk_create_raw_injects_logger_context(django_assert_max_num_queries):
     with logger_context({"ambient_key": "ambient_val"}):
         with django_assert_max_num_queries(1):
@@ -70,6 +74,7 @@ def test_bulk_create_raw_injects_logger_context(django_assert_max_num_queries):
 
 
 @pytest.mark.django_db
+@override_settings(RESILIENT_LOGGER=VALID_CONFIG_ALL_FIELDS)
 def test_bulk_create_raw_precedence_and_empty_list():
     # 1. Precedence test: explicit item context overrides ambient keys
     with logger_context({"conflict_key": "ambient", "shared_key": "keep_me"}):
@@ -99,6 +104,7 @@ def test_bulk_create_raw_precedence_and_empty_list():
 
 
 @pytest.mark.django_db
+@override_settings(RESILIENT_LOGGER=VALID_CONFIG_ALL_FIELDS)
 def test_bulk_create_structured_logger_context_precedence():
     ambient_context = {
         "operation": "AMBIENT_OP",
@@ -135,6 +141,7 @@ def test_bulk_create_structured_logger_context_precedence():
 
 
 @pytest.mark.django_db
+@override_settings(RESILIENT_LOGGER=VALID_CONFIG_ALL_FIELDS)
 def test_single_create_paths_inject_logger_context():
     with logger_context({"trace_id": "abc-123"}):
         # 1. Standard create()
@@ -175,6 +182,7 @@ def test_single_create_paths_inject_logger_context():
 
 
 @pytest.mark.django_db
+@override_settings(RESILIENT_LOGGER=VALID_CONFIG_ALL_FIELDS)
 def test_bulk_create_structured_with_none_fields():
     with logger_context({"env": "test"}):
         ResilientLogSource.bulk_create_structured(
