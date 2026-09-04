@@ -134,7 +134,7 @@ def test_m2m():
     parent.children.set(children)
     entry = object_to_auditlog_source(parent)
     event = entry.get_document().get("audit_event")
-    expected = f"Updated {str(parent)}"
+    expected = f"Update {parent.__class__.__name__} ({parent.id})"
 
     assert expected == event.get("message")
 
@@ -147,7 +147,7 @@ def test_m2o():
 
     entry1 = object_to_auditlog_source(children)
     event1 = entry1.get_document().get("audit_event")
-    expected1 = f"Created {children}"
+    expected1 = f"Create {children.__class__.__name__} ({children.id})"
     assert expected1 in event1.get("message")
 
     parent2 = M2OParent.objects.create(message="parent")
@@ -156,7 +156,7 @@ def test_m2o():
 
     entry2 = object_to_auditlog_source(children)
     event2 = entry2.get_document().get("audit_event")
-    expected2 = f"Updated {children}"
+    expected2 = f"Update {children.__class__.__name__} ({children.id})"
     assert expected2 in event2.get("message")
 
 

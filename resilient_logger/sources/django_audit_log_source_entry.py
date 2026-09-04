@@ -26,6 +26,11 @@ class DjangoAuditLogSourceEntry(AbstractLogSourceEntry):
         # Remove is_sent variable from additional_data, it's only for local tracking
         additional_data.pop("is_sent", None)
 
+        target_model = self.parse_target_model()
+        target_pk = str(self.log.object_id)
+        operation_str = str(action).capitalize()
+        message = f"{operation_str} {target_model} ({target_pk})"
+
         extra = {
             **additional_data,
             "changes": self.log.changes,
@@ -43,7 +48,7 @@ class DjangoAuditLogSourceEntry(AbstractLogSourceEntry):
                     "value": self.log.object_repr,
                 },
                 "environment": config["environment"],
-                "message": str(self.log),
+                "message": message,
                 "extra": extra,
             },
         }
@@ -63,6 +68,18 @@ class DjangoAuditLogSourceEntry(AbstractLogSourceEntry):
 
         self.log.additional_data["is_sent"] = True
         self.log.save(update_fields=["additional_data"])
+
+    def parse_target_model(self) -> str:
+        content_type = self.log.content_type
+
+        if not content_type:
+            return "Unknown"
+
+        model_cls = content_type.model_class()
+
+        # Uses Python class name (e.g., M2MParent) if model exists in registry,
+        # otherwise falls back to lowercased database string (e.g., m2mparent)
+        return model_cls.__name__ if model_cls else content_type.model
 
     @classmethod
     def _parse_actor(cls, raw_actor: AbstractUser | None) -> dict:
