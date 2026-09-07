@@ -27,7 +27,7 @@ class DjangoAuditLogSourceEntry(AbstractLogSourceEntry):
         additional_data.pop("is_sent", None)
 
         target_model = self.parse_target_model()
-        target_pk = str(self.log.object_id)
+        target_pk = str(self.log.object_id) if self.log.object_id is not None else "N/A"
         operation_str = str(action).capitalize()
         message = f"{operation_str} {target_model} ({target_pk})"
 
