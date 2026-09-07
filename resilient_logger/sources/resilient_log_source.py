@@ -10,6 +10,14 @@ from resilient_logger.models import ResilientLogEntry
 from resilient_logger.sources import AbstractLogSource
 from resilient_logger.sources.resilient_log_source_entry import ResilientLogSourceEntry
 
+try:
+    from logger_extra.logger_context import get_logger_context
+except ImportError:
+
+    def get_logger_context() -> dict:
+        return {}
+
+
 TResilientLogSource = TypeVar("TResilientLogSource", bound="ResilientLogSource")
 
 
@@ -35,10 +43,11 @@ class ResilientLogSource(AbstractLogSource):
     def create(
         cls: type[TResilientLogSource], *, level: int, message: Any, context: dict
     ) -> TResilientLogSource:
+        logger_context = get_logger_context()
         entry = ResilientLogEntry.objects.create(
             level=level,
             message=message,
-            context=context,
+            context=logger_context | context,
         )
 
         return ResilientLogSourceEntry(entry)
@@ -47,8 +56,13 @@ class ResilientLogSource(AbstractLogSource):
     def bulk_create(
         cls: type[TResilientLogSource], objs: Iterable[ResilientLogEntryData]
     ) -> Iterable[TResilientLogSource]:
+        logger_context = get_logger_context()
         entries = ResilientLogEntry.objects.bulk_create(
-            ResilientLogEntry(level=obj.level, message=obj.message, context=obj.context)
+            ResilientLogEntry(
+                level=obj.level,
+                message=obj.message,
+                context=logger_context | obj.context,
+            )
             for obj in objs
         )
 
@@ -65,10 +79,12 @@ class ResilientLogSource(AbstractLogSource):
         target: dict | None = None,
         extra: dict | None = None,
     ) -> TResilientLogSource:
+        logger_context = get_logger_context()
         return cls.create(
             level=level,
             message=message,
             context={
+                **logger_context,
                 **(extra or {}),
                 "actor": actor or {},
                 "operation": operation,
@@ -81,11 +97,13 @@ class ResilientLogSource(AbstractLogSource):
         cls: type[TResilientLogSource],
         objs: list[StructuredResilientLogEntryData],
     ) -> Iterable[TResilientLogSource]:
+        logger_context = get_logger_context()
         prepared_objs = [
             ResilientLogEntryData(
                 level=obj.level,
                 message=obj.message,
                 context={
+                    **logger_context,
                     **(obj.extra or {}),
                     "actor": obj.actor or {},
                     "operation": obj.operation,
