@@ -1,6 +1,18 @@
 <!-- DOCTOC SKIP -->
 # Changelog
 
+## [3.0.0](https://github.com/City-of-Helsinki/django-resilient-logger/compare/v2.3.0...v3.0.0) (2026-09-08)
+
+
+### ⚠ BREAKING CHANGES
+
+* simplify django-auditlog's message content ([#53](https://github.com/City-of-Helsinki/django-resilient-logger/issues/53))
+
+### Features
+
+* Add django-logger-extra as optional dep ([#52](https://github.com/City-of-Helsinki/django-resilient-logger/issues/52)) ([a3dc5e6](https://github.com/City-of-Helsinki/django-resilient-logger/commit/a3dc5e6386d8ba5a0176d84a7ea2dc08db1a0460))
+* Simplify django-auditlog's message content ([#53](https://github.com/City-of-Helsinki/django-resilient-logger/issues/53)) ([b793ec0](https://github.com/City-of-Helsinki/django-resilient-logger/commit/b793ec0a115ece60ac54e45d93c16f04b9945bdd))
+
 ## [2.3.0](https://github.com/City-of-Helsinki/django-resilient-logger/compare/v2.2.0...v2.3.0) (2026-05-27)
 
 
