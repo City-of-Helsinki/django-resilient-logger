@@ -1,18 +1,24 @@
 import importlib
 from unittest.mock import patch
+from uuid import uuid4
 
 import pytest
 from auditlog.context import set_actor
 from auditlog.models import LogEntry
-from django.contrib.auth.models import User
 from django.test import override_settings
 
 from resilient_logger.sources import DjangoAuditLogSource
 from resilient_logger.sources.django_audit_log_source_entry import (
     DjangoAuditLogSourceEntry,
 )
-from tests.models import DummyModel, M2MChild, M2MParent, M2OChild, M2OParent
+from resilient_logger.utils import get_resilient_logger_config
+from tests.models import DummyModel, DummyUser, M2MChild, M2MParent, M2OChild, M2OParent
 from tests.testdata.testconfig import VALID_CONFIG_ALL_FIELDS
+
+
+@pytest.fixture(autouse=True)
+def setup():
+    get_resilient_logger_config.cache_clear()
 
 
 @pytest.fixture
@@ -163,8 +169,9 @@ def test_m2o():
 @pytest.mark.django_db
 @override_settings(RESILIENT_LOGGER=VALID_CONFIG_ALL_FIELDS)
 def test_actor():
-    user = User.objects.create(
-        email="admin@localhost", first_name="Test", last_name="User"
+    uuid = uuid4()
+    user = DummyUser.objects.create(
+        email="admin@localhost", first_name="Test", last_name="User", uuid=uuid
     )
 
     with set_actor(user):
@@ -173,7 +180,7 @@ def test_actor():
     entry = object_to_auditlog_source(object)
     event = entry.get_document().get("audit_event")
 
-    assert event.get("actor") == {"email": "admin@localhost", "name": "Test User"}
+    assert event.get("actor") == {"name": "Test User", "email": "admin@localhost"}
 
 
 def test_optional_django_audit_log():

@@ -5,7 +5,9 @@ from resilient_logger.sources.abstract_log_source_entry import (
     AbstractLogSourceEntry,
     AuditLogDocument,
 )
-from resilient_logger.utils import get_resilient_logger_config
+from resilient_logger.utils import (
+    get_resilient_logger_config,
+)
 
 
 class DjangoAuditLogSourceEntry(AbstractLogSourceEntry):
@@ -26,7 +28,7 @@ class DjangoAuditLogSourceEntry(AbstractLogSourceEntry):
         # Remove is_sent variable from additional_data, it's only for local tracking
         additional_data.pop("is_sent", None)
 
-        target_model = self.parse_target_model()
+        target_model = self._parse_target_model()
         target_pk = str(self.log.object_id) if self.log.object_id is not None else "N/A"
         operation_str = str(action).capitalize()
         message = f"{operation_str} {target_model} ({target_pk})"
@@ -37,10 +39,12 @@ class DjangoAuditLogSourceEntry(AbstractLogSourceEntry):
             "source_pk": self.get_id(),
         }
 
+        resolve_actor = config["_actor_resolver_fn"] or self._resolve_default_actor
+
         return {
             "@timestamp": self.log.timestamp,
             "audit_event": {
-                "actor": self._parse_actor(actor),
+                "actor": resolve_actor(actor),
                 "date_time": self.log.timestamp,
                 "operation": str(action).upper(),
                 "origin": config["origin"],
@@ -69,7 +73,7 @@ class DjangoAuditLogSourceEntry(AbstractLogSourceEntry):
         self.log.additional_data["is_sent"] = True
         self.log.save(update_fields=["additional_data"])
 
-    def parse_target_model(self) -> str:
+    def _parse_target_model(self) -> str:
         content_type = self.log.content_type
 
         if not content_type:
@@ -81,9 +85,6 @@ class DjangoAuditLogSourceEntry(AbstractLogSourceEntry):
         # otherwise falls back to lowercased database string (e.g., m2mparent)
         return model_cls.__name__ if model_cls else content_type.model
 
-    @classmethod
-    def _parse_actor(cls, raw_actor: AbstractUser | None) -> dict:
+    def _resolve_default_actor(self, raw_actor: AbstractUser | None) -> dict:
         if raw_actor:
             return {"name": raw_actor.get_full_name(), "email": raw_actor.email}
-
-        return {"name": None, "email": None}

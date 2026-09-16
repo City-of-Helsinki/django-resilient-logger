@@ -1,3 +1,5 @@
+from unittest.mock import ANY
+
 VALID_CONFIG_ALL_FIELDS = {
     "sources": [
         {
@@ -16,6 +18,8 @@ VALID_CONFIG_ALL_FIELDS = {
     "clear_sent_entries": True,
     "environment": "dev",
     "origin": "test",
+    "actor_resolver": None,
+    "_actor_resolver_fn": ANY,
 }
 
 VALID_CONFIG_MISSING_OPTIONAL = {
@@ -32,6 +36,8 @@ VALID_CONFIG_MISSING_OPTIONAL = {
     ],
     "environment": "dev",
     "origin": "test",
+    "actor_resolver": None,
+    "_actor_resolver_fn": ANY,
 }
 
 INVALID_CONFIG_MISSING_TARGETS = {
@@ -46,6 +52,8 @@ INVALID_CONFIG_MISSING_TARGETS = {
     "clear_sent_entries": True,
     "environment": "dev",
     "origin": "test",
+    "actor_resolver": None,
+    "_actor_resolver_fn": ANY,
 }
 
 INVALID_CONFIG_EMPTY_TARGETS = {
@@ -61,6 +69,8 @@ INVALID_CONFIG_EMPTY_TARGETS = {
     "clear_sent_entries": True,
     "environment": "dev",
     "origin": "test",
+    "actor_resolver": None,
+    "_actor_resolver_fn": ANY,
 }
 
 INVALID_CONFIG_MISSING_SOURCES = {
@@ -76,6 +86,8 @@ INVALID_CONFIG_MISSING_SOURCES = {
     "clear_sent_entries": True,
     "environment": "dev",
     "origin": "test",
+    "actor_resolver": None,
+    "_actor_resolver_fn": ANY,
 }
 
 INVALID_CONFIG_EMPTY_SOURCES = {
@@ -92,6 +104,8 @@ INVALID_CONFIG_EMPTY_SOURCES = {
     "clear_sent_entries": True,
     "environment": "dev",
     "origin": "test",
+    "actor_resolver": None,
+    "_actor_resolver_fn": ANY,
 }
 
 INVALID_CONFIG_MISSING_ENVIRONMENT = {
@@ -106,6 +120,8 @@ INVALID_CONFIG_MISSING_ENVIRONMENT = {
     "submit_unsent_entries": True,
     "clear_sent_entries": True,
     "origin": "test",
+    "actor_resolver": None,
+    "_actor_resolver_fn": ANY,
 }
 
 INVALID_CONFIG_EMPTY_ENVIRONMENT = {
@@ -121,6 +137,8 @@ INVALID_CONFIG_EMPTY_ENVIRONMENT = {
     "clear_sent_entries": True,
     "environment": "",
     "origin": "test",
+    "actor_resolver": None,
+    "_actor_resolver_fn": ANY,
 }
 
 INVALID_CONFIG_MISSING_ORIGIN = {
@@ -135,6 +153,8 @@ INVALID_CONFIG_MISSING_ORIGIN = {
     "submit_unsent_entries": True,
     "clear_sent_entries": True,
     "environment": "dev",
+    "actor_resolver": None,
+    "_actor_resolver_fn": ANY,
 }
 
 INVALID_CONFIG_EMPTY_ORIGIN = {
@@ -150,4 +170,6 @@ INVALID_CONFIG_EMPTY_ORIGIN = {
     "clear_sent_entries": True,
     "environment": "dev",
     "origin": "",
+    "actor_resolver": None,
+    "_actor_resolver_fn": ANY,
 }

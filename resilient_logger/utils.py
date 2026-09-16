@@ -1,6 +1,7 @@
 import hashlib
 import json
 import logging
+import uuid
 from collections.abc import Callable, Sequence
 from functools import cache
 from importlib import import_module
@@ -8,8 +9,13 @@ from typing import Any, TypedDict, TypeVar, cast
 
 from django.conf import settings
 from django.core.serializers.json import DjangoJSONEncoder
+from django.utils.module_loading import import_string
 
 from resilient_logger.errors.missing_context_error import MissingContextError
+
+# Type alias for clarity across the codebase
+ActorResolverCallable = Callable[[Any], dict]
+ActorResolverConfig = str | ActorResolverCallable | None
 
 
 class ResilientLoggerConfig(TypedDict):
@@ -21,6 +27,10 @@ class ResilientLoggerConfig(TypedDict):
     clear_sent_entries: bool
     sources: list[dict[str, Any]]
     targets: list[dict[str, Any]]
+    # Raw config value (fn, dotted string, or field name)
+    actor_resolver: ActorResolverConfig
+    # Pre-compiled callable cached in memory
+    _actor_resolver_fn: ActorResolverCallable | None
 
 
 def _non_empty_string(input: str) -> bool:
@@ -29,6 +39,14 @@ def _non_empty_string(input: str) -> bool:
 
 def _non_empty_list(input: list) -> bool:
     return len(input) > 0
+
+
+def _normalize_actor(actor: Any) -> dict:
+    """Ensures actor output is always wrapped in a dictionary."""
+    if isinstance(actor, dict):
+        return actor
+
+    return {"value": actor}
 
 
 _required_fields: tuple[tuple[str, type[Any], Callable[[Any], bool] | None], ...] = (
@@ -43,6 +61,7 @@ _default_config: ResilientLoggerConfig = {
     "chunk_size": 500,
     "clear_sent_entries": False,
     "submit_unsent_entries": False,
+    "actor_resolver": None,
 }
 
 BUILTIN_LOG_RECORD_ATTRS = {
@@ -128,13 +147,16 @@ def get_resilient_logger_config() -> ResilientLoggerConfig:
 
         if not isinstance(value, expected_type):
             actual_type = type(value).__name__
+            expected_type = expected_type.__name__
             raise RuntimeError(
-                f"RESILIENT_LOGGER['{key}'] must be {expected_type.__name__}, "
-                f"got {actual_type}"
+                f"RESILIENT_LOGGER['{key}'] must be {expected_type}, got {actual_type}"
             )
 
         if validator and not validator(value):
             raise RuntimeError(f"RESILIENT_LOGGER['{key}'] failed validation")
+
+    # Resolve raw config (fn/string/field) into a pre-compiled function once at startup
+    config["_actor_resolver_fn"] = parse_actor_resolver(config.get("actor_resolver"))
 
     return cast(ResilientLoggerConfig, config)
 
@@ -177,3 +199,56 @@ def value_as_dict(value: str | dict) -> dict:
     raise TypeError(
         f"Invalid value_as_dict input. Expected 'str | dict', got '{value_type}'"
     )
+
+
+def parse_uuid(value: str | None) -> uuid.UUID | None:
+    if not value:
+        return None
+    try:
+        return uuid.UUID(str(value))
+    except (ValueError, AttributeError, TypeError):
+        return None
+
+
+def parse_actor_resolver(target: Any) -> ActorResolverCallable | None:
+    """
+    Resolves an actor extraction setting into a single callable returning a dict.
+
+    Supported formats:
+    - None: Return None (use per class default instead)
+    - Callable: Direct execution (wrapped if it returns non-dict)
+    - Import path string: Imported at runtime via import_string (wrapped if non-dict)
+    - Field name string: Direct attribute lookup (wrapped via _normalize_actor)
+    """
+    if target is None:
+        return None
+
+    if callable(target):
+        return lambda user: _normalize_actor(target(user))
+
+    if isinstance(target, str):
+        try:
+            resolved_fn = import_string(target)
+
+            if callable(resolved_fn):
+                return lambda user: _normalize_actor(resolved_fn(user))
+
+        except (ImportError, ValueError):
+
+            def _field_getter(user: Any) -> dict:
+                if user is None:
+                    return _normalize_actor(None)
+
+                if isinstance(user, dict):
+                    val = user.get(target)
+                else:
+                    val = getattr(user, target, None)
+
+                    if callable(val):
+                        val = val()
+
+                return _normalize_actor(val)
+
+            return _field_getter
+
+    raise TypeError(f"Invalid actor_extractor configuration type: {type(target)}")

@@ -2,6 +2,8 @@ import datetime
 from dataclasses import dataclass
 from typing import Any
 
+from django.contrib.auth.models import AbstractUser
+
 from resilient_logger.models import ResilientLogEntry
 from resilient_logger.sources.abstract_log_source_entry import (
     AbstractLogSourceEntry,
@@ -37,9 +39,9 @@ class ResilientLogSourceEntry(AbstractLogSourceEntry):
     def get_document(self) -> AuditLogDocument:
         config = get_resilient_logger_config()
         context = (self.log.context or {}).copy()
-        actor = context.pop("actor", "unknown")
+        actor = context.pop("actor", value_as_dict("unknown"))
         operation = context.pop("operation", "MANUAL")
-        target = context.pop("target", "unknown")
+        target = context.pop("target", value_as_dict("unknown"))
         iso_date = (
             self.log.created_at.astimezone(datetime.timezone.utc)
             .isoformat(timespec="milliseconds")
@@ -51,10 +53,12 @@ class ResilientLogSourceEntry(AbstractLogSourceEntry):
             "source_pk": self.get_id(),
         }
 
+        resolve_actor = config["_actor_resolver_fn"] or self._resolve_default_actor
+
         return {
             "@timestamp": iso_date,
             "audit_event": {
-                "actor": value_as_dict(actor),
+                "actor": resolve_actor(actor),
                 "date_time": iso_date,
                 "operation": operation,
                 "origin": config["origin"],
@@ -72,3 +76,6 @@ class ResilientLogSourceEntry(AbstractLogSourceEntry):
     def mark_sent(self) -> None:
         self.log.is_sent = True
         self.log.save(update_fields=["is_sent"])
+
+    def _resolve_default_actor(self, actor: AbstractUser | None) -> dict:
+        return actor
