@@ -1,4 +1,3 @@
-import datetime
 from dataclasses import dataclass
 from typing import Any
 
@@ -9,7 +8,11 @@ from resilient_logger.sources.abstract_log_source_entry import (
     AbstractLogSourceEntry,
     AuditLogDocument,
 )
-from resilient_logger.utils import get_resilient_logger_config, value_as_dict
+from resilient_logger.utils import (
+    format_audit_time,
+    get_resilient_logger_config,
+    value_as_dict,
+)
 
 
 @dataclass
@@ -42,11 +45,7 @@ class ResilientLogSourceEntry(AbstractLogSourceEntry):
         actor = context.pop("actor", value_as_dict("unknown"))
         operation = context.pop("operation", "MANUAL")
         target = context.pop("target", value_as_dict("unknown"))
-        iso_date = (
-            self.log.created_at.astimezone(datetime.timezone.utc)
-            .isoformat(timespec="milliseconds")
-            .replace("+00:00", "Z")
-        )
+        iso_date = format_audit_time(self.log.created_at)
 
         extra = {
             **context,

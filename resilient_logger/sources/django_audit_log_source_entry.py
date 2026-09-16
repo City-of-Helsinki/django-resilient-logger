@@ -6,6 +6,7 @@ from resilient_logger.sources.abstract_log_source_entry import (
     AuditLogDocument,
 )
 from resilient_logger.utils import (
+    format_audit_time,
     get_resilient_logger_config,
 )
 
@@ -32,6 +33,7 @@ class DjangoAuditLogSourceEntry(AbstractLogSourceEntry):
         target_pk = str(self.log.object_id) if self.log.object_id is not None else "N/A"
         operation_str = str(action).capitalize()
         message = f"{operation_str} {target_model} ({target_pk})"
+        iso_date = format_audit_time(self.log.timestamp)
 
         extra = {
             **additional_data,
@@ -42,10 +44,10 @@ class DjangoAuditLogSourceEntry(AbstractLogSourceEntry):
         resolve_actor = config["_actor_resolver_fn"] or self._resolve_default_actor
 
         return {
-            "@timestamp": self.log.timestamp,
+            "@timestamp": iso_date,
             "audit_event": {
                 "actor": resolve_actor(actor),
-                "date_time": self.log.timestamp,
+                "date_time": iso_date,
                 "operation": str(action).upper(),
                 "origin": config["origin"],
                 "target": {

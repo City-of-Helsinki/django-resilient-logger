@@ -1,3 +1,4 @@
+import datetime
 import hashlib
 import json
 import logging
@@ -252,3 +253,11 @@ def parse_actor_resolver(target: Any) -> ActorResolverCallable | None:
             return _field_getter
 
     raise TypeError(f"Invalid actor_extractor configuration type: {type(target)}")
+
+
+def format_audit_time(time: datetime.datetime) -> str:
+    return (
+        time.astimezone(datetime.timezone.utc)
+        .isoformat(timespec="milliseconds")
+        .replace("+00:00", "Z")
+    )
