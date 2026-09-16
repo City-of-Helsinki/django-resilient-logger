@@ -1,8 +1,6 @@
 from dataclasses import dataclass
 from typing import Any
 
-from django.contrib.auth.models import AbstractUser
-
 from resilient_logger.models import ResilientLogEntry
 from resilient_logger.sources.abstract_log_source_entry import (
     AbstractLogSourceEntry,
@@ -76,5 +74,5 @@ class ResilientLogSourceEntry(AbstractLogSourceEntry):
         self.log.is_sent = True
         self.log.save(update_fields=["is_sent"])
 
-    def _resolve_default_actor(self, actor: AbstractUser | None) -> dict:
-        return actor
+    def _resolve_default_actor(self, actor: dict | None) -> dict:
+        return actor or {}
