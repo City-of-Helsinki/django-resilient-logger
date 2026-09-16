@@ -8,6 +8,7 @@ from resilient_logger.sources.abstract_log_source_entry import (
 from resilient_logger.utils import (
     format_audit_time,
     get_resilient_logger_config,
+    parse_uuid,
 )
 
 
@@ -87,6 +88,24 @@ class DjangoAuditLogSourceEntry(AbstractLogSourceEntry):
         # otherwise falls back to lowercased database string (e.g., m2mparent)
         return model_cls.__name__ if model_cls else content_type.model
 
-    def _resolve_default_actor(self, raw_actor: AbstractUser | None) -> dict:
-        if raw_actor:
-            return {"name": raw_actor.get_full_name(), "email": raw_actor.email}
+    def _resolve_default_actor(self, actor: AbstractUser | None) -> dict:
+        actor_data = {
+            "uuid": None,
+            "version": None,
+            "email": None,
+        }
+
+        if not actor:
+            return actor_data
+
+        raw_uuid = getattr(actor, "uuid", None)
+        raw_email = getattr(actor, "email", None)
+        parsed_uuid = parse_uuid(raw_uuid)
+
+        if parsed_uuid:
+            actor_data["uuid"] = str(parsed_uuid)
+            actor_data["version"] = parsed_uuid.version
+        else:
+            actor_data["email"] = raw_email or None
+
+        return actor_data

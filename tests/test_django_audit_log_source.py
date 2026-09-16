@@ -180,7 +180,7 @@ def test_actor():
     entry = object_to_auditlog_source(object)
     event = entry.get_document().get("audit_event")
 
-    assert event.get("actor") == {"name": "Test User", "email": "admin@localhost"}
+    assert event.get("actor") == {"uuid": str(uuid), "version": 4, "email": None}
 
 
 def test_optional_django_audit_log():
