@@ -10,12 +10,13 @@ from typing import Any, TypeAlias, TypedDict, TypeVar, cast
 
 from django.conf import settings
 from django.core.serializers.json import DjangoJSONEncoder
+from django.db import models
 from django.utils.module_loading import import_string
 
 from resilient_logger.errors.missing_context_error import MissingContextError
 
 # Type alias for clarity across the codebase
-ActorResolverCallable: TypeAlias = Callable[[Any], dict]
+ActorResolverCallable: TypeAlias = Callable[[models.Model | dict], dict]
 ActorResolverConfig: TypeAlias = str | ActorResolverCallable | None
 
 
@@ -206,8 +207,12 @@ def parse_uuid(value: str | uuid.UUID | None) -> uuid.UUID | None:
 
     try:
         return uuid.UUID(value)
-    except ValueError:
+    except (ValueError, TypeError):
         return None
+
+
+def get_user_value(user: models.Model | dict, prop: str):
+    return user.get(prop, None) if isinstance(user, dict) else getattr(user, prop, None)
 
 
 def _normalize_actor(val: Any) -> dict:
@@ -227,10 +232,7 @@ def _extract_actor_field_or_key(target: str, user: Any) -> Any:
     if user is None:
         return None
 
-    if isinstance(user, dict):
-        return user.get(target)
-
-    val = getattr(user, target, None)
+    val = get_user_value(user, target)
     return val() if callable(val) else val
 
 
