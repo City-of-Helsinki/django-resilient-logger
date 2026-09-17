@@ -42,14 +42,6 @@ def _non_empty_list(input: list) -> bool:
     return len(input) > 0
 
 
-def _normalize_actor(actor: Any) -> dict:
-    """Ensures actor output is always wrapped in a dictionary."""
-    if isinstance(actor, dict):
-        return actor
-
-    return {"value": actor}
-
-
 _required_fields: tuple[tuple[str, type[Any], Callable[[Any], bool] | None], ...] = (
     ("environment", str, _non_empty_string),
     ("origin", str, _non_empty_string),
