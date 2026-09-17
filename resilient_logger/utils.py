@@ -6,7 +6,7 @@ import uuid
 from collections.abc import Callable, Sequence
 from functools import cache
 from importlib import import_module
-from typing import Any, TypedDict, TypeVar, cast
+from typing import Any, TypeAlias, TypedDict, TypeVar, cast
 
 from django.conf import settings
 from django.core.serializers.json import DjangoJSONEncoder
@@ -15,8 +15,8 @@ from django.utils.module_loading import import_string
 from resilient_logger.errors.missing_context_error import MissingContextError
 
 # Type alias for clarity across the codebase
-ActorResolverCallable = Callable[[Any], dict]
-ActorResolverConfig = str | ActorResolverCallable | None
+ActorResolverCallable: TypeAlias = Callable[[Any], dict]
+ActorResolverConfig: TypeAlias = str | ActorResolverCallable | None
 
 
 class ResilientLoggerConfig(TypedDict):
@@ -202,60 +202,82 @@ def value_as_dict(value: str | dict) -> dict:
     )
 
 
-def parse_uuid(value: str | None) -> uuid.UUID | None:
-    if not value:
+def parse_uuid(value: str | uuid.UUID | None) -> uuid.UUID | None:
+    """
+    Parses the given value into a UUID instance or returns None if parsing fails.
+    """
+    if value is None:
         return None
+
+    if isinstance(value, uuid.UUID):
+        return value
+
     try:
-        return uuid.UUID(str(value))
-    except (ValueError, AttributeError, TypeError):
+        return uuid.UUID(value)
+    except ValueError:
         return None
+
+
+def _normalize_actor(val: Any) -> dict:
+    """
+    Ensures raw extracted values are always wrapped in a dictionary payload.
+    """
+    if isinstance(val, dict):
+        return val
+
+    return {"value": val}
+
+
+def _extract_actor_field_or_key(target: str, user: Any) -> Any:
+    """
+    Fetches a raw attribute/property or dictionary key from a user representation.
+    """
+    if user is None:
+        return None
+
+    if isinstance(user, dict):
+        return user.get(target)
+
+    val = getattr(user, target, None)
+    return val() if callable(val) else val
+
+
+def _parse_raw_actor_resolver(target: str | Callable) -> ActorResolverCallable:
+    """
+    Resolves target to a raw value extractor (callable, import path, or field getter).
+    """
+    if callable(target):
+        return target
+
+    try:
+        resolved_fn = import_string(target)
+        if callable(resolved_fn):
+            return resolved_fn
+    except (ImportError, ValueError):
+        pass
+
+    # Target is a field or dictionary key string
+    return lambda user: _extract_actor_field_or_key(target, user)
 
 
 def parse_actor_resolver(target: Any) -> ActorResolverCallable | None:
     """
     Resolves an actor extraction setting into a single callable returning a dict.
-
-    Supported formats:
-    - None: Return None (use per class default instead)
-    - Callable: Direct execution (wrapped if it returns non-dict)
-    - Import path string: Imported at runtime via import_string (wrapped if non-dict)
-    - Field name string: Direct attribute lookup (wrapped via _normalize_actor)
     """
     if target is None:
         return None
 
-    if callable(target):
-        return lambda user: _normalize_actor(target(user))
+    if not isinstance(target, (str, Callable)):
+        raise TypeError(f"Invalid actor_extractor configuration type: {type(target)}")
 
-    if isinstance(target, str):
-        try:
-            resolved_fn = import_string(target)
-
-            if callable(resolved_fn):
-                return lambda user: _normalize_actor(resolved_fn(user))
-
-        except (ImportError, ValueError):
-
-            def _field_getter(user: Any) -> dict:
-                if user is None:
-                    return _normalize_actor(None)
-
-                if isinstance(user, dict):
-                    val = user.get(target)
-                else:
-                    val = getattr(user, target, None)
-
-                    if callable(val):
-                        val = val()
-
-                return _normalize_actor(val)
-
-            return _field_getter
-
-    raise TypeError(f"Invalid actor_extractor configuration type: {type(target)}")
+    actor_resolver = _parse_raw_actor_resolver(target)
+    return lambda user: _normalize_actor(actor_resolver(user))
 
 
 def format_audit_time(time: datetime.datetime) -> str:
+    """
+    Provides shared timedate stringification for different log sources.
+    """
     return (
         time.astimezone(datetime.timezone.utc)
         .isoformat(timespec="milliseconds")

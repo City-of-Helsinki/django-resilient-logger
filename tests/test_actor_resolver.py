@@ -13,59 +13,52 @@ def custom_scalar_parser(user):
 
 
 @pytest.fixture
-def dummy_user():
-    user = DummyUser.objects.create(email="test@example.com", username="testuser")
-    return user
-
-
-def test_parse_actor_resolver_none():
-    extractor = parse_actor_resolver(None)
-    assert extractor is None
+def dummy_user(db):
+    return DummyUser.objects.create(email="test@example.com", username="testuser")
 
 
 @pytest.mark.django_db
-def test_parse_actor_resolver_callable_dict(dummy_user):
-    extractor = parse_actor_resolver(custom_callable_parser)
-    assert extractor(dummy_user) == {
-        "custom_id": f"user_{dummy_user.pk}",
-        "email": dummy_user.email,
-    }
+@pytest.mark.parametrize(
+    "actor_resolver, expected_output",
+    [
+        (  # Direct callable returning dict
+            custom_callable_parser,
+            lambda u: {"custom_id": f"user_{u.pk}", "email": "test@example.com"},
+        ),
+        (  # Direct callable returning scalar -> wrapped
+            custom_scalar_parser,
+            lambda u: {"value": "test@example.com"},
+        ),
+        (  # String import path
+            "tests.test_actor_resolver.custom_callable_parser",
+            lambda u: {"custom_id": f"user_{u.pk}", "email": "test@example.com"},
+        ),
+        (  # Direct model field string -> wrapped
+            "email",
+            lambda u: {"value": "test@example.com"},
+        ),
+        (  # Non-existent model field -> wrapped None
+            "non_existent_field",
+            lambda u: {"value": None},
+        ),
+    ],
+)
+def test_parse_actor_resolver_valid_targets(
+    actor_resolver, expected_output, dummy_user
+):
+    actor_resolver_fn = parse_actor_resolver(actor_resolver)
+    assert actor_resolver_fn(dummy_user) == expected_output(dummy_user)
 
 
-@pytest.mark.django_db
-def test_parse_actor_resolver_callable_scalar(dummy_user):
-    extractor = parse_actor_resolver(custom_scalar_parser)
-    assert extractor(dummy_user) == {"value": dummy_user.email}
+def test_parse_actor_resolver_field_on_none():
+    resolver = parse_actor_resolver("email")
+    assert resolver(None) == {"value": None}
 
 
-@pytest.mark.django_db
-def test_parse_actor_resolver_import_path(dummy_user):
-    extractor = parse_actor_resolver("tests.test_actor_resolver.custom_callable_parser")
-    assert extractor(dummy_user) == {
-        "custom_id": f"user_{dummy_user.pk}",
-        "email": dummy_user.email,
-    }
+def test_parse_actor_resolver_none_target():
+    assert parse_actor_resolver(None) is None
 
 
-@pytest.mark.django_db
-def test_parse_actor_resolver_field_string(dummy_user):
-    extractor = parse_actor_resolver("email")
-    assert extractor(dummy_user) == {"value": dummy_user.email}
-
-
-@pytest.mark.django_db
-def test_parse_actor_resolver_missing_field(dummy_user):
-    extractor = parse_actor_resolver("non_existent_field")
-    assert extractor(dummy_user) == {"value": None}
-
-
-@pytest.mark.django_db
-def test_parse_actor_resolver_none_user():
-    extractor = parse_actor_resolver("email")
-    assert extractor(None) == {"value": None}
-
-
-@pytest.mark.django_db
 def test_parse_actor_resolver_invalid_type():
     with pytest.raises(TypeError, match="Invalid actor_extractor configuration type"):
         parse_actor_resolver(12345)

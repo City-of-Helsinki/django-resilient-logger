@@ -40,9 +40,9 @@ class ResilientLogSourceEntry(AbstractLogSourceEntry):
     def get_document(self) -> AuditLogDocument:
         config = get_resilient_logger_config()
         context = (self.log.context or {}).copy()
-        actor = context.pop("actor", value_as_dict("unknown"))
+        actor = context.pop("actor", "unknown")
         operation = context.pop("operation", "MANUAL")
-        target = context.pop("target", value_as_dict("unknown"))
+        target = context.pop("target", "unknown")
         iso_date = format_audit_time(self.log.created_at)
 
         extra = {
@@ -55,7 +55,7 @@ class ResilientLogSourceEntry(AbstractLogSourceEntry):
         return {
             "@timestamp": iso_date,
             "audit_event": {
-                "actor": resolve_actor(actor),
+                "actor": resolve_actor(value_as_dict(actor)),
                 "date_time": iso_date,
                 "operation": operation,
                 "origin": config["origin"],
@@ -75,4 +75,4 @@ class ResilientLogSourceEntry(AbstractLogSourceEntry):
         self.log.save(update_fields=["is_sent"])
 
     def _resolve_default_actor(self, actor: dict | None) -> dict:
-        return actor or {}
+        return value_as_dict(actor) if actor else {}
