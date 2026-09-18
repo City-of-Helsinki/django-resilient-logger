@@ -6,6 +6,7 @@ from resilient_logger.sources.abstract_log_source_entry import (
     AuditLogDocument,
 )
 from resilient_logger.utils import (
+    ResilientLoggerConfig,
     format_audit_time,
     get_resilient_logger_config,
     parse_uuid,
@@ -21,7 +22,6 @@ class DjangoAuditLogSourceEntry(AbstractLogSourceEntry):
 
     def get_document(self) -> AuditLogDocument:
         config = get_resilient_logger_config()
-        actor: AbstractUser | None = self.log.actor
 
         # Looks up the action tuple [int, str] and uses name of it
         action = LogEntry.Action.choices[self.log.action][1]
@@ -30,6 +30,7 @@ class DjangoAuditLogSourceEntry(AbstractLogSourceEntry):
         # Remove is_sent variable from additional_data, it's only for local tracking
         additional_data.pop("is_sent", None)
 
+        actor = self._parse_actor(config)
         target_model = self._parse_target_model()
         target_pk = self._parse_target_pk()
         operation_str = str(action).capitalize()
@@ -42,12 +43,10 @@ class DjangoAuditLogSourceEntry(AbstractLogSourceEntry):
             "source_pk": self.get_id(),
         }
 
-        resolve_actor = config["_actor_resolver_fn"] or self._resolve_default_actor
-
         return {
             "@timestamp": iso_date,
             "audit_event": {
-                "actor": resolve_actor(actor),
+                "actor": actor,
                 "date_time": iso_date,
                 "operation": str(action).upper(),
                 "origin": config["origin"],
@@ -75,6 +74,10 @@ class DjangoAuditLogSourceEntry(AbstractLogSourceEntry):
 
         self.log.additional_data["is_sent"] = True
         self.log.save(update_fields=["additional_data"])
+
+    def _parse_actor(self, config: ResilientLoggerConfig) -> dict:
+        actor_resolver = config["_actor_resolver_fn"] or self._resolve_default_actor
+        return actor_resolver(self.log.actor)
 
     def _parse_target_pk(self) -> str:
         if self.log.object_id:
