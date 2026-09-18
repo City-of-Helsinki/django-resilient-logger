@@ -12,8 +12,17 @@ from resilient_logger.sources.django_audit_log_source_entry import (
     DjangoAuditLogSourceEntry,
 )
 from resilient_logger.utils import get_resilient_logger_config
+from resilient_logger.workarounds.models import DjangoAuditLogEntryManager
 from tests.models import DummyModel, DummyUser, M2MChild, M2MParent, M2OChild, M2OParent
 from tests.testdata.testconfig import VALID_CONFIG_ALL_FIELDS
+
+
+@pytest.fixture(scope="session", autouse=True)
+def setup_session():
+    """Runs once per test session before any tests execute."""
+    restore = DjangoAuditLogEntryManager.patch()
+    yield
+    restore()
 
 
 @pytest.fixture(autouse=True)
@@ -142,6 +151,9 @@ def test_m2m():
     event = entry.get_document().get("audit_event")
     expected = f"Update {parent.__class__.__name__} ({parent.id})"
 
+    children = event.get("extra").get("changes").get("children").get("objects")
+
+    assert [child for child in children if "Base" in child] == []
     assert expected == event.get("message")
 
 
