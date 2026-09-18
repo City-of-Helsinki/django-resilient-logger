@@ -50,9 +50,7 @@ class DjangoAuditLogSourceEntry(AbstractLogSourceEntry):
                 "date_time": iso_date,
                 "operation": str(action).upper(),
                 "origin": config["origin"],
-                "target": {
-                    "value": self.log.object_repr,
-                },
+                "target": {"model": target_model, "value": target_pk},
                 "environment": config["environment"],
                 "message": message,
                 "extra": extra,
