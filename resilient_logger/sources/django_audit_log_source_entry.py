@@ -31,7 +31,7 @@ class DjangoAuditLogSourceEntry(AbstractLogSourceEntry):
         additional_data.pop("is_sent", None)
 
         target_model = self._parse_target_model()
-        target_pk = str(self.log.object_id) if self.log.object_id is not None else "N/A"
+        target_pk = self._parse_target_pk()
         operation_str = str(action).capitalize()
         message = f"{operation_str} {target_model} ({target_pk})"
         iso_date = format_audit_time(self.log.timestamp)
@@ -75,6 +75,14 @@ class DjangoAuditLogSourceEntry(AbstractLogSourceEntry):
 
         self.log.additional_data["is_sent"] = True
         self.log.save(update_fields=["additional_data"])
+
+    def _parse_target_pk(self) -> str:
+        if self.log.object_id:
+            return str(self.log.object_id)
+        if self.log.object_pk:
+            return str(self.log.object_pk)
+
+        return "N/A"
 
     def _parse_target_model(self) -> str:
         content_type = self.log.content_type
