@@ -1,4 +1,3 @@
-import datetime
 from dataclasses import dataclass
 from typing import Any
 
@@ -7,7 +6,11 @@ from resilient_logger.sources.abstract_log_source_entry import (
     AbstractLogSourceEntry,
     AuditLogDocument,
 )
-from resilient_logger.utils import get_resilient_logger_config, value_as_dict
+from resilient_logger.utils import (
+    format_audit_time,
+    get_resilient_logger_config,
+    value_as_dict,
+)
 
 
 @dataclass
@@ -40,21 +43,19 @@ class ResilientLogSourceEntry(AbstractLogSourceEntry):
         actor = context.pop("actor", "unknown")
         operation = context.pop("operation", "MANUAL")
         target = context.pop("target", "unknown")
-        iso_date = (
-            self.log.created_at.astimezone(datetime.timezone.utc)
-            .isoformat(timespec="milliseconds")
-            .replace("+00:00", "Z")
-        )
+        iso_date = format_audit_time(self.log.created_at)
 
         extra = {
             **context,
             "source_pk": self.get_id(),
         }
 
+        resolve_actor = config["_actor_resolver_fn"] or self._resolve_default_actor
+
         return {
             "@timestamp": iso_date,
             "audit_event": {
-                "actor": value_as_dict(actor),
+                "actor": resolve_actor(value_as_dict(actor)),
                 "date_time": iso_date,
                 "operation": operation,
                 "origin": config["origin"],
@@ -72,3 +73,6 @@ class ResilientLogSourceEntry(AbstractLogSourceEntry):
     def mark_sent(self) -> None:
         self.log.is_sent = True
         self.log.save(update_fields=["is_sent"])
+
+    def _resolve_default_actor(self, actor: dict | None) -> dict:
+        return value_as_dict(actor) if actor else {}

@@ -1,15 +1,23 @@
+import datetime
 import hashlib
 import json
 import logging
+import uuid
 from collections.abc import Callable, Sequence
 from functools import cache
 from importlib import import_module
-from typing import Any, TypedDict, TypeVar, cast
+from typing import Any, TypeAlias, TypedDict, TypeVar, cast
 
 from django.conf import settings
 from django.core.serializers.json import DjangoJSONEncoder
+from django.db import models
+from django.utils.module_loading import import_string
 
 from resilient_logger.errors.missing_context_error import MissingContextError
+
+# Type alias for clarity across the codebase
+ActorResolverCallable: TypeAlias = Callable[[models.Model | dict], dict]
+ActorResolverConfig: TypeAlias = str | ActorResolverCallable | None
 
 
 class ResilientLoggerConfig(TypedDict):
@@ -21,6 +29,10 @@ class ResilientLoggerConfig(TypedDict):
     clear_sent_entries: bool
     sources: list[dict[str, Any]]
     targets: list[dict[str, Any]]
+    # Raw config value (fn, dotted string, or field name)
+    actor_resolver: ActorResolverConfig
+    # Pre-compiled callable cached in memory
+    _actor_resolver_fn: ActorResolverCallable | None
 
 
 def _non_empty_string(input: str) -> bool:
@@ -43,6 +55,7 @@ _default_config: ResilientLoggerConfig = {
     "chunk_size": 500,
     "clear_sent_entries": False,
     "submit_unsent_entries": False,
+    "actor_resolver": None,
 }
 
 BUILTIN_LOG_RECORD_ATTRS = {
@@ -128,13 +141,16 @@ def get_resilient_logger_config() -> ResilientLoggerConfig:
 
         if not isinstance(value, expected_type):
             actual_type = type(value).__name__
+            expected_type = expected_type.__name__
             raise RuntimeError(
-                f"RESILIENT_LOGGER['{key}'] must be {expected_type.__name__}, "
-                f"got {actual_type}"
+                f"RESILIENT_LOGGER['{key}'] must be {expected_type}, got {actual_type}"
             )
 
         if validator and not validator(value):
             raise RuntimeError(f"RESILIENT_LOGGER['{key}'] failed validation")
+
+    # Resolve raw config (fn/string/field) into a pre-compiled function once at startup
+    config["_actor_resolver_fn"] = parse_actor_resolver(config.get("actor_resolver"))
 
     return cast(ResilientLoggerConfig, config)
 
@@ -176,4 +192,88 @@ def value_as_dict(value: str | dict) -> dict:
 
     raise TypeError(
         f"Invalid value_as_dict input. Expected 'str | dict', got '{value_type}'"
+    )
+
+
+def parse_uuid(value: str | uuid.UUID | None) -> uuid.UUID | None:
+    """
+    Parses the given value into a UUID instance or returns None if parsing fails.
+    """
+    if value is None:
+        return None
+
+    if isinstance(value, uuid.UUID):
+        return value
+
+    try:
+        return uuid.UUID(value)
+    except (ValueError, TypeError):
+        return None
+
+
+def get_user_value(user: models.Model | dict, prop: str):
+    return user.get(prop, None) if isinstance(user, dict) else getattr(user, prop, None)
+
+
+def _normalize_actor(val: Any) -> dict:
+    """
+    Ensures raw extracted values are always wrapped in a dictionary payload.
+    """
+    if isinstance(val, dict):
+        return val
+
+    return {"value": val}
+
+
+def _extract_actor_field_or_key(target: str, user: Any) -> Any:
+    """
+    Fetches a raw attribute/property or dictionary key from a user representation.
+    """
+    if user is None:
+        return None
+
+    val = get_user_value(user, target)
+    return val() if callable(val) else val
+
+
+def _parse_raw_actor_resolver(target: str | Callable) -> ActorResolverCallable:
+    """
+    Resolves target to a raw value extractor (callable, import path, or field getter).
+    """
+    if callable(target):
+        return target
+
+    try:
+        resolved_fn = import_string(target)
+        if callable(resolved_fn):
+            return resolved_fn
+    except (ImportError, ValueError):
+        pass
+
+    # Target is a field or dictionary key string
+    return lambda user: _extract_actor_field_or_key(target, user)
+
+
+def parse_actor_resolver(target: Any) -> ActorResolverCallable | None:
+    """
+    Resolves an actor extraction setting into a single callable returning a dict.
+    """
+    if target is None:
+        return None
+
+    if not isinstance(target, (str, Callable)):
+        raise TypeError(f"Invalid actor_extractor configuration type: {type(target)}")
+
+    actor_resolver = _parse_raw_actor_resolver(target)
+    return lambda user: _normalize_actor(actor_resolver(user))
+
+
+def format_audit_time(time: datetime.datetime) -> str:
+    """
+    Provides shared timedate stringification for different log sources.
+    """
+    return (
+        time.astimezone(datetime.timezone.utc)
+        .isoformat(timespec="milliseconds")
+        .replace("+00:00", "Z")
     )
