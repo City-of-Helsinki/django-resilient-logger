@@ -50,51 +50,50 @@ def test_invalid_config_missing_targets():
 
 @override_settings(RESILIENT_LOGGER=INVALID_CONFIG_EMPTY_TARGETS)
 def test_invalid_config_empty_targets():
-    with pytest.raises(
-        RuntimeError, match=r"RESILIENT_LOGGER\['targets'\] failed validation"
-    ):
+    expected = r"RESILIENT_LOGGER\['targets'\] failed validation"
+    with pytest.raises(RuntimeError, match=expected):
         get_resilient_logger_config()
 
 
 @override_settings(RESILIENT_LOGGER=INVALID_CONFIG_MISSING_SOURCES)
 def test_invalid_config_missing_sources():
-    with pytest.raises(RuntimeError, match="missing required key: 'sources'"):
+    expected = "missing required key: 'sources'"
+    with pytest.raises(RuntimeError, match=expected):
         get_resilient_logger_config()
 
 
 @override_settings(RESILIENT_LOGGER=INVALID_CONFIG_EMPTY_SOURCES)
 def test_invalid_config_empty_sources():
-    with pytest.raises(
-        RuntimeError, match=r"RESILIENT_LOGGER\['sources'\] failed validation"
-    ):
+    expected = r"RESILIENT_LOGGER\['sources'\] failed validation"
+    with pytest.raises(RuntimeError, match=expected):
         get_resilient_logger_config()
 
 
 @override_settings(RESILIENT_LOGGER=INVALID_CONFIG_MISSING_ENVIRONMENT)
 def test_invalid_config_missing_environment():
-    with pytest.raises(RuntimeError, match="missing required key: 'environment'"):
+    expected = "missing required key: 'environment'"
+    with pytest.raises(RuntimeError, match=expected):
         get_resilient_logger_config()
 
 
 @override_settings(RESILIENT_LOGGER=INVALID_CONFIG_EMPTY_ENVIRONMENT)
 def test_invalid_config_empty_environment():
-    with pytest.raises(
-        RuntimeError, match=r"RESILIENT_LOGGER\['environment'\] failed validation"
-    ):
+    expected = r"RESILIENT_LOGGER\['environment'\] failed validation"
+    with pytest.raises(RuntimeError, match=expected):
         get_resilient_logger_config()
 
 
 @override_settings(RESILIENT_LOGGER=INVALID_CONFIG_MISSING_ORIGIN)
 def test_invalid_config_missing_origin():
-    with pytest.raises(RuntimeError, match="missing required key: 'origin'"):
+    expected = "missing required key: 'origin'"
+    with pytest.raises(RuntimeError, match=expected):
         get_resilient_logger_config()
 
 
 @override_settings(RESILIENT_LOGGER=INVALID_CONFIG_EMPTY_ORIGIN)
 def test_invalid_config_empty_origin():
-    with pytest.raises(
-        RuntimeError, match=r"RESILIENT_LOGGER\['origin'\] failed validation"
-    ):
+    expected = r"RESILIENT_LOGGER\['origin'\] failed validation"
+    with pytest.raises(RuntimeError, match=expected):
         get_resilient_logger_config()
 
 

@@ -1,4 +1,5 @@
 from auditlog.registry import auditlog
+from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
@@ -58,3 +59,7 @@ class M2OChild(models.Model):
 
 
 auditlog.register(M2OChild)
+
+
+class DummyUser(AbstractUser):
+    uuid = models.UUIDField(_("uuid"), max_length=64, null=True)
