@@ -129,7 +129,7 @@ RESILIENT_LOGGER_DJANGO_AUDITLOG_REPR_FN = "my_project.utils.pii_safe_object_rep
 
 - **RESILIENT_LOGGER_PATCH_DJANGO_AUDITLOG**: Boolean flag. When set to `True`, `resilient_logger` automatically applies the manager patch during Django startup (`AppConfig.ready()`).
 - **RESILIENT_LOGGER_DJANGO_AUDITLOG_REPR_FN**:
-  - `None` (or omitted): Uses the built-in default PII-safe resolver, which strips sensitive field data and represents Django models formatted strictly as `ModelName (PK)` (e.g., `User (42)`).
+  - `None` (or omitted): Uses the built-in resolver, which strips sensitive field data and represents Django models formatted strictly as `ModelName (PK)` (e.g., `User (42)`). **Note**: If the primary key itself contains PII (such as an email address), the built-in resolver will not redact it.
   - Dotted string path (e.g., `"path.to.module.custom_fn"`): Resolves and executes the specified custom representation callable.
   - Callable: Direct function handle (when configuring programmatically).
 
@@ -140,7 +140,7 @@ If you need to trigger or control the patch programmatically (e.g., within isola
 The `patch()` static method returns a `restore()` function to safely revert `LogEntry` managers to their unpatched state:
 
 ```python
-from resilient_logger.workarounds.django_auditlog import DjangoAuditLogEntryManager
+from resilient_logger.workarounds.models import DjangoAuditLogEntryManager
 
 # 1. Apply patch with a custom PII-sanitizing function or default fallback (ModelName (PK))
 restore_patch = DjangoAuditLogEntryManager.patch(object_repr_fn=pii_safe_repr_fn)

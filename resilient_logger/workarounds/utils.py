@@ -13,6 +13,10 @@ def safe_object_repr(input: Any):
     """
     Safely builds a string representation without invoking input.__str__().
     Formats as 'ModelName (pk)'.
+
+    Note: This may still contain PII if the primary key itself contains sensitive
+    data (e.g., an email address). In such cases, the user should provide a custom
+    implementation tailored to that model.
     """
     if isinstance(input, models.Model):
         model_name = input._meta.object_name
@@ -27,7 +31,7 @@ def resolve_object_repr_fn() -> ObjectReprFn:
     setting_name = "RESILIENT_LOGGER_DJANGO_AUDITLOG_REPR_FN"
     object_repr = getattr(settings, setting_name, None)
 
-    if not object_repr:
+    if object_repr is None:
         return safe_object_repr
 
     if isinstance(object_repr, str):
