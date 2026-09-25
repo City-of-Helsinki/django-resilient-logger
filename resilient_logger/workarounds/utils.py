@@ -10,9 +10,9 @@ from resilient_logger.workarounds.types import ObjectReprFn
 
 
 def safe_object_repr(input: Any):
-    """
-    Safely builds a string representation without invoking input.__str__().
-    Formats as 'ModelName (pk)'.
+    """Represent Django models as ``ModelName (pk)`` without calling their ``__str__``.
+
+    Other values pass through ``smart_str``, which may call their ``__str__``.
 
     Note: This may still contain PII if the primary key itself contains sensitive
     data (e.g., an email address). In such cases, the user should provide a custom
@@ -28,6 +28,13 @@ def safe_object_repr(input: Any):
 
 
 def resolve_object_repr_fn() -> ObjectReprFn:
+    """Resolve the AuditLog representation setting to a callable.
+
+    Return ``safe_object_repr`` when the setting is absent or ``None``. A
+    callable setting is returned directly; a dotted path is imported.
+    Raise ``ImproperlyConfigured`` for an invalid path, a non-callable target,
+    or another unsupported setting value.
+    """
     setting_name = "RESILIENT_LOGGER_DJANGO_AUDITLOG_REPR_FN"
     object_repr = getattr(settings, setting_name, None)
 

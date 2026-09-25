@@ -8,10 +8,16 @@ class ResilientLoggerConfig(AppConfig):
     name = "resilient_logger"
 
     def __init__(self, *args, **kwargs):
+        """Initialize the app with no AuditLog patch to restore."""
         super().__init__(*args, **kwargs)
         self._restore_fn = None
 
     def ready(self):
+        """Apply the AuditLog patch when enabled, replacing any earlier patch.
+
+        Invalid representation settings raise ``ImproperlyConfigured``. If
+        enabled without django-auditlog installed, its import error propagates.
+        """
         self.restore()
 
         if getattr(settings, "RESILIENT_LOGGER_PATCH_DJANGO_AUDITLOG", False):
