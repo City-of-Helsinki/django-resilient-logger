@@ -19,12 +19,17 @@ class DjangoAuditLogEntryManager(LogEntryManager):
         super().__init__()
 
     def log_create(self, instance, force_log: bool = False, **kwargs):
-        """Log an instance using the configured representation callback.
+        """
+        Helper method to create a new log entry. This method automatically populates
+        some fields when no explicit value is given.
 
-        Return the new entry, or ``None`` when ``changes`` is absent and
-        ``force_log`` is false. AuditLog substitutes fallback text if the
-        callback raises ``ObjectDoesNotExist`` for the instance; other callback
-        and manager errors propagate.
+        :param instance: The model instance to log a change for.
+        :type instance: Model
+        :param force_log: Create a LogEntry even if no changes exist.
+        :type force_log: bool
+        :param kwargs: Field overrides for the :py:class:`LogEntry` object.
+        :return: The new log entry or `None` if there were no changes.
+        :rtype: LogEntry
         """
         with self._custom_repr_fn():
             return super().log_create(instance, force_log, **kwargs)
@@ -32,12 +37,19 @@ class DjangoAuditLogEntryManager(LogEntryManager):
     def log_m2m_changes(
         self, changed_queryset, instance, operation, field_name, **kwargs
     ):
-        """Log a many-to-many change using the configured representation callback.
+        """Create a new "changed" log entry from m2m record.
 
-        The callback also represents each changed related object. Return the
-        new entry, or ``None`` for an empty ``changed_queryset``. AuditLog
-        substitutes fallback text if the callback raises ``ObjectDoesNotExist``
-        for the primary instance; other callback and manager errors propagate.
+        :param changed_queryset: The added or removed related objects.
+        :type changed_queryset: QuerySet
+        :param instance: The model instance to log a change for.
+        :type instance: Model
+        :param operation: "add" or "delete".
+        :type action: str
+        :param field_name: The name of the changed m2m field.
+        :type field_name: str
+        :param kwargs: Field overrides for the :py:class:`LogEntry` object.
+        :return: The new log entry or `None` if there were no changes.
+        :rtype: LogEntry
         """
         with self._custom_repr_fn():
             return super().log_m2m_changes(
