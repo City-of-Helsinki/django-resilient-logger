@@ -1,6 +1,14 @@
 <!-- DOCTOC SKIP -->
 # Changelog
 
+## [3.1.0](https://github.com/City-of-Helsinki/django-resilient-logger/compare/v3.0.0...v3.1.0) (2026-10-01)
+
+
+### Features
+
+* Add django-auditlog specific optional workarounds (https://github.com/City-of-Helsinki/django-resilient-logger/pull/56) ([0184ee3](https://github.com/City-of-Helsinki/django-resilient-logger/commit/0184ee345306e7965237be78243d1fc983b3b0ab))
+* Add support for custom actor resolvers (https://github.com/City-of-Helsinki/django-resilient-logger/pull/55) ([d8dc9e9](https://github.com/City-of-Helsinki/django-resilient-logger/commit/d8dc9e9109b785ad3772e11702c45341b013723a))
+
 ## [3.0.0](https://github.com/City-of-Helsinki/django-resilient-logger/compare/v2.3.0...v3.0.0) (2026-09-09)
 
 
