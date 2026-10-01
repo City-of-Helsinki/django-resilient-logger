@@ -5,8 +5,11 @@ from uuid import uuid4
 import pytest
 from auditlog.context import set_actor
 from auditlog.models import LogEntry
+from django.apps import apps
+from django.db import models
 from django.test import override_settings
 
+from resilient_logger.apps import ResilientLoggerConfig
 from resilient_logger.sources import DjangoAuditLogSource
 from resilient_logger.sources.django_audit_log_source_entry import (
     DjangoAuditLogSourceEntry,
@@ -14,6 +17,16 @@ from resilient_logger.sources.django_audit_log_source_entry import (
 from resilient_logger.utils import get_resilient_logger_config
 from tests.models import DummyModel, DummyUser, M2MChild, M2MParent, M2OChild, M2OParent
 from tests.testdata.testconfig import VALID_CONFIG_ALL_FIELDS
+
+
+def dummy_object_repr(input) -> str:
+    if isinstance(input, models.Model):
+        model_name = input._meta.object_name
+        pk_val = input.pk
+
+        return f"Patched-{model_name} ({pk_val})"
+
+    return str(input)
 
 
 @pytest.fixture(autouse=True)
@@ -24,6 +37,13 @@ def setup():
 @pytest.fixture
 def log_source():
     return DjangoAuditLogSource()
+
+
+@pytest.fixture
+def resilient_logger_app():
+    app_config: ResilientLoggerConfig = apps.get_app_config("resilient_logger")
+    yield app_config
+    app_config.restore()
 
 
 def create_objects(count: int) -> list[DummyModel]:
@@ -130,7 +150,9 @@ def test_changes_str_fallback():
 
 @pytest.mark.django_db
 @override_settings(RESILIENT_LOGGER=VALID_CONFIG_ALL_FIELDS)
-def test_m2m():
+def test_m2m(resilient_logger_app: ResilientLoggerConfig):
+    resilient_logger_app.ready()
+
     parent = M2MParent.objects.create(message="parent")
     children: list[M2MChild] = []
 
@@ -142,6 +164,37 @@ def test_m2m():
     event = entry.get_document().get("audit_event")
     expected = f"Update {parent.__class__.__name__} ({parent.id})"
 
+    children = event.get("extra").get("changes").get("children").get("objects")
+
+    assert children
+    assert [child for child in children if "Base" in child] == children
+    assert expected == event.get("message")
+
+
+@pytest.mark.django_db
+@override_settings(
+    RESILIENT_LOGGER=VALID_CONFIG_ALL_FIELDS,
+    RESILIENT_LOGGER_PATCH_DJANGO_AUDITLOG=True,
+    RESILIENT_LOGGER_DJANGO_AUDITLOG_REPR_FN="tests.test_django_audit_log_source.dummy_object_repr",
+)
+def test_m2m_patched(resilient_logger_app: ResilientLoggerConfig):
+    resilient_logger_app.ready()
+
+    parent = M2MParent.objects.create(message="parent")
+    children: list[M2MChild] = []
+
+    for i in range(3):
+        children.append(M2MChild.objects.create(message=str(i)))
+
+    parent.children.set(children)
+    entry = object_to_auditlog_source(parent)
+    event = entry.get_document().get("audit_event")
+    expected = f"Update {parent.__class__.__name__} ({parent.id})"
+
+    children = event.get("extra").get("changes").get("children").get("objects")
+
+    assert children
+    assert [child for child in children if "Patched" in child] == children
     assert expected == event.get("message")
 
 
