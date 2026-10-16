@@ -273,7 +273,7 @@ def format_audit_time(time: datetime.datetime) -> str:
     Provides shared timedate stringification for different log sources.
     """
     return (
-        time.astimezone(datetime.timezone.utc)
+        time.astimezone(datetime.UTC)
         .isoformat(timespec="milliseconds")
         .replace("+00:00", "Z")
     )
