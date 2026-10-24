@@ -1,6 +1,15 @@
 <!-- DOCTOC SKIP -->
 # Changelog
 
+## [3.1.1](https://github.com/City-of-Helsinki/django-resilient-logger/compare/v3.1.0...v3.1.1) (2026-10-24)
+
+
+### Dependencies
+
+* Add support for Django 6.1 ([1c559dc](https://github.com/City-of-Helsinki/django-resilient-logger/commit/1c559dcd3116b3d87b7c65239e03ebe0d4c8f6eb))
+* Add support for Python 3.15 ([b50cc4c](https://github.com/City-of-Helsinki/django-resilient-logger/commit/b50cc4cf2e4994dce343fcdff9e0a1c6f210a84d))
+* Drop support for Python 3.10 ([357ce76](https://github.com/City-of-Helsinki/django-resilient-logger/commit/357ce765905a04950c498e2bd3d093510565c070))
+
 ## [3.1.0](https://github.com/City-of-Helsinki/django-resilient-logger/compare/v3.0.0...v3.1.0) (2026-10-01)
 
 
