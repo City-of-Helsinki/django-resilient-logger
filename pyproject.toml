@@ -75,11 +75,6 @@ lint = [
 ]
 manage = "tests/manage.py {args}"
 
-[tool.hatch.envs.hatch-uv]
-dependencies = [
-  "uv>=0.11.1",
-]
-
 [tool.hatch.envs.hatch-test]
 default-args = ["tests"]
 features = ["all"]
@@ -111,6 +106,11 @@ run = [
 run-cov = "coverage run -m pytest{env:HATCH_TEST_ARGS:} {args}"
 cov-combine = "coverage combine"
 cov-report = "coverage report"
+
+[tool.hatch.envs.hatch-uv]
+dependencies = [
+  "uv>=0.13.5",
+]
 
 [tool.pytest.ini_options]
 django_find_project = false
